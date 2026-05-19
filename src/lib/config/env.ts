@@ -16,6 +16,14 @@ export function getOpenAiApiKey(): string | undefined {
   return process.env.OPENAI_API_KEY;
 }
 
+export function getResendApiKey(): string | undefined {
+  return process.env.RESEND_API_KEY;
+}
+
+export function getWhatsAppVerifyToken(): string | undefined {
+  return process.env.WHATSAPP_VERIFY_TOKEN;
+}
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(getPublicSupabaseUrl() && getPublicSupabaseAnonKey());
 }

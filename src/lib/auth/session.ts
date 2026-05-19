@@ -7,6 +7,7 @@ export type UserProfile = {
   email: string | null;
   full_name: string | null;
   company_name: string | null;
+  phone: string | null;
   plan: string;
   onboarding_completed: boolean;
 };
@@ -34,7 +35,7 @@ export async function getProfile(userId?: string): Promise<UserProfile | null> {
 
   const { data, error } = await session.supabase
     .from("profiles")
-    .select("id, email, full_name, company_name, plan, onboarding_completed")
+    .select("id, email, full_name, company_name, phone, plan, onboarding_completed")
     .eq("id", id)
     .maybeSingle();
 

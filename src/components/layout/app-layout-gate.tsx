@@ -11,7 +11,7 @@ export function AppLayoutGate({ children }: { children: React.ReactNode }) {
   const isOnboarding = pathname?.startsWith("/app/onboarding");
 
   if (isOnboarding) {
-    return <>{children}</>;
+    return <ToastProvider>{children}</ToastProvider>;
   }
 
   return (

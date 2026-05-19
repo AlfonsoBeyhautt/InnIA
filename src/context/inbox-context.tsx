@@ -239,11 +239,26 @@ export function InboxProvider({ children }: { children: ReactNode }) {
       const text = content.trim();
       if (!text) return;
 
+      const conv = items.find((c) => c.id === conversationId);
+
       try {
-        const res = await apiPost<{ conversation: Conversation }>(
-          `/api/conversations/${conversationId}/messages`,
-          { body: text, senderType: "owner" }
-        );
+        let res: { conversation: Conversation };
+        if (conv?.platform === "WhatsApp") {
+          res = await apiPost<{ conversation: Conversation }>(
+            "/api/integrations/whatsapp/send",
+            { conversationId, text }
+          );
+        } else if (conv?.platform === "Email") {
+          res = await apiPost<{ conversation: Conversation }>(
+            "/api/integrations/email/send",
+            { conversationId, text }
+          );
+        } else {
+          res = await apiPost<{ conversation: Conversation }>(
+            `/api/conversations/${conversationId}/messages`,
+            { body: text, senderType: "owner" }
+          );
+        }
         if (res.conversation) {
           setItems((prev) =>
             prev.map((c) => (c.id === conversationId ? res.conversation : c))

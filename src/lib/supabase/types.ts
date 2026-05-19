@@ -42,6 +42,7 @@ export interface Database {
           email: string | null;
           full_name: string | null;
           company_name: string | null;
+          phone: string | null;
           plan: string;
           onboarding_completed: boolean;
           created_at: string;
@@ -52,6 +53,7 @@ export interface Database {
           email?: string | null;
           full_name?: string | null;
           company_name?: string | null;
+          phone?: string | null;
           plan?: string;
           onboarding_completed?: boolean;
         };
@@ -65,6 +67,7 @@ export interface Database {
           slug: string;
           name: string;
           location: string;
+          property_type: string | null;
           description: string | null;
           image_url: string | null;
           status: string;
@@ -91,6 +94,7 @@ export interface Database {
           slug: string;
           name: string;
           location?: string;
+          property_type?: string | null;
           description?: string | null;
           image_url?: string | null;
           status?: string;
@@ -305,6 +309,7 @@ export interface Database {
           status: string;
           access_token_encrypted: string | null;
           refresh_token_encrypted: string | null;
+          config: Json;
           last_sync_at: string | null;
           sync_status: string | null;
           error_message: string | null;
@@ -318,6 +323,7 @@ export interface Database {
           status?: string;
           access_token_encrypted?: string | null;
           refresh_token_encrypted?: string | null;
+          config?: Json;
           last_sync_at?: string | null;
           sync_status?: string | null;
           error_message?: string | null;

@@ -126,6 +126,65 @@ export async function updateGuest(id: string, input: Partial<Guest>) {
   return data;
 }
 
+function slugifyPropertyName(name: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 32);
+  return base || "propiedad";
+}
+
+export type CreatePropertyInput = {
+  name: string;
+  location: string;
+  propertyType?: string;
+  description?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  houseRules?: string;
+  wifiName?: string;
+  wifiPassword?: string;
+  parkingInfo?: string;
+  petPolicy?: string;
+  internalNotes?: string;
+  platforms?: Property["platforms"];
+};
+
+export async function createProperty(input: CreatePropertyInput) {
+  const { supabase, userId } = await authDb();
+  const slug = `${slugifyPropertyName(input.name)}-${Date.now().toString(36).slice(-4)}`;
+
+  const { data, error } = await supabase
+    .from("properties")
+    .insert({
+      owner_id: userId,
+      slug,
+      name: input.name.trim(),
+      location: input.location.trim(),
+      property_type: input.propertyType ?? null,
+      description: input.description?.trim() || null,
+      check_in_time: input.checkInTime ?? "15:00",
+      check_out_time: input.checkOutTime ?? "10:00",
+      house_rules: input.houseRules?.trim() || null,
+      wifi_name: input.wifiName?.trim() || null,
+      wifi_password: input.wifiPassword?.trim() || null,
+      parking_info: input.parkingInfo?.trim() || null,
+      pet_policy: input.petPolicy?.trim() || null,
+      internal_notes: input.internalNotes?.trim() || null,
+      platforms: (input.platforms ?? []).map((p) => p.toLowerCase()),
+      status: "disponible",
+      occupancy: 0,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function updateProperty(dbId: string, input: Partial<Property>) {
   const patch: Database["public"]["Tables"]["properties"]["Update"] = {};
   if (input.name !== undefined) patch.name = input.name;
@@ -571,6 +630,30 @@ export async function upsertIntegration(
 
   if (error) throw error;
   return data;
+}
+
+export async function upsertIntegrationConfig(
+  provider: Tables<"integrations">["provider"],
+  input: {
+    status?: string;
+    sync_status?: string;
+    error_message?: string | null;
+    config?: Record<string, unknown>;
+    accessToken?: string;
+  }
+) {
+  const patch: Database["public"]["Tables"]["integrations"]["Update"] = {
+    status: input.status,
+    sync_status: input.sync_status,
+    error_message: input.error_message ?? null,
+  };
+  if (input.config !== undefined) {
+    patch.config = input.config as unknown as Database["public"]["Tables"]["integrations"]["Update"]["config"];
+  }
+  if (input.accessToken !== undefined) {
+    patch.access_token_encrypted = input.accessToken;
+  }
+  return upsertIntegration(provider, patch);
 }
 
 export async function createAiResponseLog(input: {

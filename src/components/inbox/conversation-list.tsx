@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, getInitials } from "@/components/ui/avatar";
 import { PlatformBadge } from "@/components/inbox/platform-badge";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { InboxEmptyState } from "@/components/inbox/inbox-empty-state";
 
 const filters: { id: InboxFilter; label: string }[] = [
   { id: "all", label: "Todas" },
@@ -59,7 +60,7 @@ export function ConversationList() {
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {conversations.length === 0 ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">No hay conversaciones</p>
+          <InboxEmptyState />
         ) : (
           <ul className="divide-y divide-border/50">
             {conversations.map((c) => {
