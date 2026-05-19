@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/context/toast-context";
 import { CheckCircle2, Loader2, MessageCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ type IntegrationRow = {
 const EMPTY_INTEGRATIONS: IntegrationRow[] = [];
 
 export function IntegrationsPanel() {
+  const { toast } = useToast();
   const { data, refetch } = useApi<IntegrationRow[]>(
     "/api/integrations",
     EMPTY_INTEGRATIONS
@@ -44,21 +46,35 @@ export function IntegrationsPanel() {
     try {
       await apiPost("/api/integrations/sync", { provider });
       await refetch();
+      toast(`${providerMeta[provider].label} sincronizado correctamente.`, "success");
+    } catch {
+      toast(`No se pudo sincronizar ${providerMeta[provider].label}.`, "error");
     } finally {
       setSyncing(null);
     }
   };
 
   const toggle = async (provider: IntegrationProvider, connect: boolean) => {
-    await fetch("/api/integrations", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        provider,
-        status: connect ? "connected" : "disconnected",
-      }),
-    });
-    await refetch();
+    try {
+      const res = await fetch("/api/integrations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          status: connect ? "connected" : "disconnected",
+        }),
+      });
+      if (!res.ok) throw new Error("patch failed");
+      await refetch();
+      toast(
+        connect
+          ? `${providerMeta[provider].label} conectado.`
+          : `${providerMeta[provider].label} desconectado.`,
+        "success"
+      );
+    } catch {
+      toast(`No se pudo actualizar ${providerMeta[provider].label}.`, "error");
+    }
   };
 
   return (

@@ -28,7 +28,17 @@ function priorityFromStatus(status: TaskStatus): { label: string; variant: "dang
   return { label: "Normal", variant: "secondary" };
 }
 
-export function OperationsKanban({ tasks }: { tasks: OperationTask[] }) {
+type OperationsKanbanProps = {
+  tasks: OperationTask[];
+  onSelectTask?: (task: OperationTask) => void;
+  onMoveTask?: (taskId: string, status: TaskStatus) => void;
+};
+
+export function OperationsKanban({
+  tasks,
+  onSelectTask,
+  onMoveTask,
+}: OperationsKanbanProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {columns.map((col, colIndex) => {
@@ -85,7 +95,22 @@ export function OperationsKanban({ tasks }: { tasks: OperationTask[] }) {
                         Checklist {progress}
                       </p>
                     )}
-                    <Button variant="ghost" size="sm" className="mt-2 h-7 gap-1 px-0 text-xs text-primary">
+                    {col.status !== task.status && onMoveTask && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 h-7 text-[10px]"
+                        onClick={() => onMoveTask(task.id, col.status)}
+                      >
+                        Mover a {col.title}
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1 h-7 gap-1 px-0 text-xs text-primary"
+                      onClick={() => onSelectTask?.(task)}
+                    >
                       Ver detalle
                       <ArrowRight className="h-3 w-3" />
                     </Button>

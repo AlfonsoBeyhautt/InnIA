@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Bot, Send, User } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Bot, CheckCircle2, ClipboardList, Send, User } from "lucide-react";
 import { useInbox } from "@/context/inbox-context";
+import { useToast } from "@/context/toast-context";
 import { propertyName } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +14,15 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function MessageThread() {
-  const { selected, sendOwnerMessage, getAnalysis, setMobileShowList } = useInbox();
+  const { toast } = useToast();
+  const {
+    selected,
+    sendOwnerMessage,
+    getAnalysis,
+    setMobileShowList,
+    markResolved,
+    createTaskFromConversation,
+  } = useInbox();
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +81,48 @@ export function MessageThread() {
                   {label}
                 </Badge>
               ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[11px]"
+                onClick={async () => {
+                  try {
+                    await markResolved(selected.id);
+                    toast("Conversación marcada como resuelta.", "success");
+                  } catch {
+                    toast("No se pudo actualizar la conversación.", "error");
+                  }
+                }}
+              >
+                <CheckCircle2 className="mr-1 h-3 w-3" />
+                Resuelta
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-[11px]"
+                onClick={async () => {
+                  try {
+                    await createTaskFromConversation(selected.id);
+                    toast("Tarea operativa creada.", "success");
+                  } catch {
+                    toast("No se pudo crear la tarea.", "error");
+                  }
+                }}
+              >
+                <ClipboardList className="mr-1 h-3 w-3" />
+                Crear tarea
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-[11px]" asChild>
+                <Link href="/app/crm">Huésped</Link>
+              </Button>
+              {selected.reservationId && (
+                <Button variant="outline" size="sm" className="h-7 text-[11px]" asChild>
+                  <Link href="/app/reservas">Reserva</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>

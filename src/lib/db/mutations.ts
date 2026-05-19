@@ -9,7 +9,8 @@ import type {
 
 type GuestInsert = Database["public"]["Tables"]["guests"]["Insert"];
 type GuestUpdate = Database["public"]["Tables"]["guests"]["Update"];
-import type { Guest, Property, Reservation } from "@/types";
+import { syncPropertyKnowledgeFromProperty } from "@/lib/property-knowledge-sync";
+import type { Guest, Property, Reservation, Unit } from "@/types";
 
 async function authDb() {
   const { supabase, user } = await requireAuth();
@@ -143,6 +144,10 @@ export async function updateProperty(dbId: string, input: Partial<Property>) {
   if (input.internalNotes !== undefined) patch.internal_notes = input.internalNotes;
   if (input.checkInTime !== undefined) patch.check_in_time = input.checkInTime;
   if (input.checkOutTime !== undefined) patch.check_out_time = input.checkOutTime;
+  if (input.platforms !== undefined) {
+    patch.platforms = input.platforms.map((p) => p.toLowerCase());
+  }
+  if (input.smartLockOnline !== undefined) patch.smart_lock_online = input.smartLockOnline;
 
   const { supabase, userId } = await authDb();
   const { data, error } = await supabase
@@ -155,6 +160,135 @@ export async function updateProperty(dbId: string, input: Partial<Property>) {
 
   if (error) throw error;
   return data;
+}
+
+export async function updatePropertyWithKnowledge(
+  dbId: string,
+  input: Partial<Property> & { checkOutNotes?: string; syncKnowledge?: boolean }
+) {
+  const { checkOutNotes, syncKnowledge = true, ...propertyInput } = input;
+  const row = await updateProperty(dbId, propertyInput);
+  if (syncKnowledge) {
+    await syncPropertyKnowledgeFromProperty(dbId, { ...propertyInput, checkOutNotes });
+  }
+  return row;
+}
+
+function slugifyUnitName(name: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 36);
+  return base || "unidad";
+}
+
+async function assertPropertyOwner(propertyDbId: string) {
+  const { supabase, userId } = await authDb();
+  const { data, error } = await supabase
+    .from("properties")
+    .select("id")
+    .eq("id", propertyDbId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Propiedad no encontrada");
+}
+
+export async function createUnit(
+  propertyDbId: string,
+  input: { name: string; capacity: number; status?: Unit["status"]; notes?: string }
+) {
+  await assertPropertyOwner(propertyDbId);
+  const slug = `${slugifyUnitName(input.name)}-${Date.now().toString(36).slice(-4)}`;
+  const { supabase } = await authDb();
+  const { data, error } = await supabase
+    .from("units")
+    .insert({
+      property_id: propertyDbId,
+      slug,
+      name: input.name.trim(),
+      capacity: input.capacity,
+      status: input.status ?? "disponible",
+      notes: input.notes?.trim() || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateUnit(
+  unitId: string,
+  input: Partial<Pick<Unit, "name" | "capacity" | "status" | "notes">>
+) {
+  const { supabase, userId } = await authDb();
+  const { data: existing, error: findErr } = await supabase
+    .from("units")
+    .select("id, property_id")
+    .eq("id", unitId)
+    .single();
+
+  if (findErr || !existing) throw new Error("Unidad no encontrada");
+
+  const { data: owned } = await supabase
+    .from("properties")
+    .select("id")
+    .eq("id", existing.property_id)
+    .eq("owner_id", userId)
+    .maybeSingle();
+  if (!owned) throw new Error("No autorizado");
+
+  const patch: Database["public"]["Tables"]["units"]["Update"] = {};
+  if (input.name !== undefined) patch.name = input.name.trim();
+  if (input.capacity !== undefined) patch.capacity = input.capacity;
+  if (input.status !== undefined) patch.status = input.status;
+  if (input.notes !== undefined) patch.notes = input.notes?.trim() || null;
+
+  const { data, error } = await supabase
+    .from("units")
+    .update(patch)
+    .eq("id", unitId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteUnit(unitId: string) {
+  const { supabase, userId } = await authDb();
+  const { data: existing, error: findErr } = await supabase
+    .from("units")
+    .select("id, property_id")
+    .eq("id", unitId)
+    .single();
+
+  if (findErr || !existing) throw new Error("Unidad no encontrada");
+
+  const { data: owned } = await supabase
+    .from("properties")
+    .select("id")
+    .eq("id", existing.property_id)
+    .eq("owner_id", userId)
+    .maybeSingle();
+  if (!owned) throw new Error("No autorizado");
+
+  const { count, error: countErr } = await supabase
+    .from("reservations")
+    .select("id", { count: "exact", head: true })
+    .eq("unit_id", unitId);
+
+  if (countErr) throw countErr;
+  if (count && count > 0) {
+    throw new Error("No se puede eliminar: hay reservas vinculadas a esta unidad.");
+  }
+
+  const { error } = await supabase.from("units").delete().eq("id", unitId);
+  if (error) throw error;
 }
 
 export async function createReservation(input: {

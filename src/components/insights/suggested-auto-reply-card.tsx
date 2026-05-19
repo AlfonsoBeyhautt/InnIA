@@ -1,8 +1,18 @@
+"use client";
+
 import type { SuggestedAutoReply } from "@/types";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
 
-export function SuggestedAutoReplyCard({ item }: { item: SuggestedAutoReply }) {
+export function SuggestedAutoReplyCard({
+  item,
+  onCreate,
+  created,
+}: {
+  item: SuggestedAutoReply;
+  onCreate?: () => void;
+  created?: boolean;
+}) {
   return (
     <article className="flex flex-col gap-3 rounded-xl border border-border/70 bg-background p-4">
       <div className="flex items-start gap-2">
@@ -16,8 +26,13 @@ export function SuggestedAutoReplyCard({ item }: { item: SuggestedAutoReply }) {
         <span className="text-xs text-muted-foreground">
           {item.sourceCount} consultas similares
         </span>
-        <Button size="sm" variant="outline">
-          Crear respuesta automática
+        <Button
+          size="sm"
+          variant={created ? "secondary" : "outline"}
+          disabled={created}
+          onClick={onCreate}
+        >
+          {created ? "Creada" : "Crear respuesta automática"}
         </Button>
       </div>
     </article>

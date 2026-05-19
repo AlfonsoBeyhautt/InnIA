@@ -4,15 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useProperty } from "@/context/property-context";
 import { properties as mockProperties, reservations as mockReservations } from "@/data/mock";
 import { PropertyCard } from "@/components/properties/property-card";
-import { PropertyEditPanel } from "@/components/properties/property-edit-panel";
+import { PropertyEditor } from "@/components/properties/property-editor";
 import { useApi } from "@/lib/hooks/use-api";
 import type { Property, Reservation } from "@/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export default function PropiedadesPage() {
   const { selectedProperty } = useProperty();
@@ -29,23 +23,40 @@ export default function PropiedadesPage() {
   const reservations =
     apiReservations && apiReservations.length > 0 ? apiReservations : mockReservations;
 
+  const [detail, setDetail] = useState<Property | null>(null);
+  const [list, setList] = useState<Property[]>(properties);
+
   useEffect(() => {
-    const onReady = () => {
+    setList(properties);
+  }, [properties]);
+
+  useEffect(() => {
+    const refresh = () => {
       void refetchProperties();
       void refetchReservations();
     };
-    window.addEventListener("innia:data-ready", onReady);
-    return () => window.removeEventListener("innia:data-ready", onReady);
+    window.addEventListener("innia:data-ready", refresh);
+    window.addEventListener("innia:property-updated", refresh);
+    return () => {
+      window.removeEventListener("innia:data-ready", refresh);
+      window.removeEventListener("innia:property-updated", refresh);
+    };
   }, [refetchProperties, refetchReservations]);
-  const [detail, setDetail] = useState<Property | null>(null);
 
   const filtered = useMemo(
     () =>
       selectedProperty === "all"
-        ? properties
-        : properties.filter((p) => p.id === selectedProperty),
-    [selectedProperty, properties]
+        ? list
+        : list.filter((p) => p.id === selectedProperty),
+    [selectedProperty, list]
   );
+
+  const handleSaved = (updated: Property) => {
+    setList((prev) =>
+      prev.map((p) => (p.id === updated.id || p.dbId === updated.dbId ? updated : p))
+    );
+    setDetail(updated);
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 sm:p-8">
@@ -56,37 +67,36 @@ export default function PropiedadesPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((p) => {
-          const upcoming = reservations.find(
-            (r) => r.propertyId === p.id && r.status !== "cancelada"
-          );
-          return (
-            <PropertyCard
-              key={p.dbId ?? p.id}
-              property={p}
-              upcoming={upcoming}
-              onViewDetails={() => setDetail(p)}
-            />
-          );
-        })}
-      </div>
+      {filtered.length === 0 ? (
+        <p className="rounded-xl bg-muted/50 p-8 text-center text-sm text-muted-foreground">
+          No hay propiedades para el filtro seleccionado.
+        </p>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((p) => {
+            const upcoming = reservations.find(
+              (r) => r.propertyId === p.id && r.status !== "cancelada"
+            );
+            return (
+              <PropertyCard
+                key={p.dbId ?? p.id}
+                property={p}
+                upcoming={upcoming}
+                onViewDetails={() => setDetail(p)}
+              />
+            );
+          })}
+        </div>
+      )}
 
-      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{detail?.name}</DialogTitle>
-          </DialogHeader>
-          {detail && (
-            <PropertyEditPanel
-              property={detail}
-              onSaved={(p) => {
-                setDetail(p);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {detail && (
+        <PropertyEditor
+          property={detail}
+          open={!!detail}
+          onOpenChange={(open) => !open && setDetail(null)}
+          onSaved={handleSaved}
+        />
+      )}
     </div>
   );
 }

@@ -14,10 +14,10 @@ import {
   YAxis,
 } from "recharts";
 import { motion } from "framer-motion";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { Download, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency, propertyName } from "@/lib/utils";
 import { financeSummary, monthlyRevenue, transactions } from "@/data/mock";
-import { financeAiInsights, propertyProfitability } from "@/data/mock/operations";
+import { financeAiInsights } from "@/data/mock/operations";
 import { PlatformBadge } from "@/components/inbox/platform-badge";
 import { Badge } from "@/components/ui/badge";
 import { PageSection, MotionCard } from "@/components/motion/page-section";
@@ -29,6 +29,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Platform, PropertyId } from "@/types";
+import {
+  computeProfitability,
+  exportFinanceCsv,
+  filterTransactions,
+  hasActiveFinanceFilters,
+} from "@/lib/finance-filters";
+import { useToast } from "@/context/toast-context";
+import { Button } from "@/components/ui/button";
 
 const CHART_PRIMARY = "#5c6b4a";
 const CHART_PRIMARY_LIGHT = "#8a9a84";
@@ -49,58 +57,34 @@ const tooltipStyle = {
 };
 
 export function FinanceDashboard() {
+  const { toast } = useToast();
   const [propertyFilter, setPropertyFilter] = useState<PropertyId | "all">("all");
   const [monthFilter, setMonthFilter] = useState("mayo");
   const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
   const [activePieIndex, setActivePieIndex] = useState<number | null>(null);
 
-  const filteredTx = useMemo(() => {
-    return transactions.filter((t) => {
-      if (propertyFilter !== "all" && t.propertyId !== propertyFilter) return false;
-      if (t.month && t.month !== monthFilter) return false;
-      if (platformFilter !== "all") {
-        if (t.type === "gasto" && !t.platform) return true;
-        if (t.platform !== platformFilter) return false;
-      }
-      return true;
-    });
-  }, [propertyFilter, monthFilter, platformFilter]);
+  const filters = useMemo(
+    () => ({ property: propertyFilter, month: monthFilter, platform: platformFilter }),
+    [propertyFilter, monthFilter, platformFilter]
+  );
 
-  const filteredProfitability = useMemo(() => {
-    let list =
-      propertyFilter === "all"
-        ? propertyProfitability
-        : propertyProfitability.filter((p) => p.id === propertyFilter);
+  const activeFilters = hasActiveFinanceFilters(filters);
 
-    if (platformFilter !== "all" || filteredTx.length > 0) {
-      list = list.map((p) => {
-        const txs = filteredTx.filter((t) => t.propertyId === p.id);
-        const ingresos = txs
-          .filter((t) => t.type === "ingreso")
-          .reduce((s, t) => s + t.amount, 0);
-        const gastos = txs
-          .filter((t) => t.type === "gasto")
-          .reduce((s, t) => s + Math.abs(t.amount), 0);
-        if (txs.length === 0 && platformFilter !== "all") {
-          return { ...p, revenue: 0, expenses: 0, margin: 0 };
-        }
-        if (txs.length === 0) return p;
-        const margin = ingresos > 0 ? Math.round(((ingresos - gastos) / ingresos) * 100) : 0;
-        return { ...p, revenue: ingresos, expenses: gastos, margin };
-      });
-    }
+  const filteredTx = useMemo(
+    () => filterTransactions(transactions, filters),
+    [filters]
+  );
 
-    if (platformFilter !== "all") {
-      list = list.filter((p) => {
-        const has = filteredTx.some(
-          (t) => t.propertyId === p.id && (t.platform === platformFilter || t.type === "gasto")
-        );
-        return has || filteredTx.length === 0;
-      });
-    }
-
-    return list;
-  }, [propertyFilter, platformFilter, filteredTx]);
+  const filteredProfitability = useMemo(
+    () =>
+      computeProfitability(
+        filteredTx,
+        propertyFilter,
+        platformFilter,
+        activeFilters || filteredTx.length > 0
+      ),
+    [filteredTx, propertyFilter, platformFilter, activeFilters]
+  );
 
   const filteredInsights = useMemo(() => {
     return financeAiInsights.filter((i) => {
@@ -122,11 +106,7 @@ export function FinanceDashboard() {
     const ganancia = ingresos - gastos;
     const margin =
       ingresos > 0 ? Math.round((ganancia / ingresos) * 100) : financeSummary.gananciaNeta;
-    const useFallback =
-      filteredTx.length === 0 &&
-      propertyFilter === "all" &&
-      monthFilter === "mayo" &&
-      platformFilter === "all";
+    const useFallback = !activeFilters && filteredTx.length === 0;
     return [
       {
         label: "Ingresos",
@@ -154,7 +134,7 @@ export function FinanceDashboard() {
         isPercent: true,
       },
     ];
-  }, [filteredTx, propertyFilter, monthFilter, platformFilter]);
+  }, [filteredTx, activeFilters]);
 
   const pieData = useMemo(() => {
     const total = filteredProfitability.reduce((s, p) => s + p.revenue, 0);
@@ -259,6 +239,22 @@ export function FinanceDashboard() {
               <SelectItem value="Directa">Directa</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto h-8 gap-1.5 text-xs"
+            onClick={() => {
+              if (filteredTx.length === 0) {
+                toast("No hay transacciones para exportar con estos filtros.", "info");
+                return;
+              }
+              exportFinanceCsv(transactions, filters);
+              toast(`Exportadas ${filteredTx.length} transacciones.`, "success");
+            }}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Exportar
+          </Button>
         </div>
       </PageSection>
 

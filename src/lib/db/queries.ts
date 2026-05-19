@@ -7,6 +7,7 @@ import {
   mapProperty,
   mapReservation,
   mapTask,
+  mapUnit,
 } from "@/lib/db/mappers";
 import type {
   Conversation,
@@ -15,6 +16,7 @@ import type {
   OperationTask,
   Property,
   Reservation,
+  Unit,
 } from "@/types";
 import type { Tables } from "@/lib/supabase/types";
 
@@ -61,7 +63,7 @@ export async function getPropertyById(id: string): Promise<Property | null> {
   return data ? mapProperty(data) : null;
 }
 
-export async function getUnits(propertyDbId: string) {
+export async function getUnits(propertyDbId: string): Promise<Unit[]> {
   const { supabase } = await authDb();
   const { data, error } = await supabase
     .from("units")
@@ -70,7 +72,22 @@ export async function getUnits(propertyDbId: string) {
     .order("name");
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(mapUnit);
+}
+
+export async function getPropertyFull(idOrSlug: string) {
+  const property =
+    idOrSlug.length > 20
+      ? await getPropertyById(idOrSlug)
+      : await getPropertyBySlug(idOrSlug);
+  if (!property?.dbId) return null;
+
+  const [units, knowledge] = await Promise.all([
+    getUnits(property.dbId),
+    getKnowledgeBase(property.dbId),
+  ]);
+
+  return { property, units, knowledge };
 }
 
 async function guestReservationHistory(guestId: string) {

@@ -13,6 +13,7 @@ import type {
   Property,
   PropertyId,
   Reservation,
+  Unit,
   Urgency,
 } from "@/types";
 
@@ -30,6 +31,7 @@ type DbConversation = Tables<"conversations"> & {
 type DbMessage = Tables<"messages">;
 type DbTask = Tables<"operation_tasks">;
 type DbKb = Tables<"knowledge_base_items">;
+type DbUnit = Tables<"units">;
 
 const platformMap: Record<string, Platform> = {
   airbnb: "Airbnb",
@@ -222,6 +224,18 @@ export function mapTask(row: DbTask, propertySlug: PropertyId): OperationTask {
     description: row.description ?? undefined,
     reservationId: row.reservation_id ?? undefined,
     unitDbId: row.unit_id ?? undefined,
+  };
+}
+
+export function mapUnit(row: DbUnit): Unit {
+  return {
+    id: row.id,
+    propertyDbId: row.property_id,
+    slug: row.slug,
+    name: row.name,
+    capacity: row.capacity,
+    status: row.status as Unit["status"],
+    notes: row.notes ?? undefined,
   };
 }
 

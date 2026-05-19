@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { downloadCsv } from "@/lib/export-csv";
+import { useToast } from "@/context/toast-context";
 import { useProperty } from "@/context/property-context";
 import { filterByProperty, propertyName } from "@/lib/utils";
 import { reservations as mockReservations } from "@/data/mock";
@@ -42,6 +44,7 @@ function OperationalChip({
 }
 
 export default function ReservasPage() {
+  const { toast } = useToast();
   const { selectedProperty } = useProperty();
   const [view, setView] = useState<CalendarViewRange>("quincena");
   const [rangeStart, setRangeStart] = useState(getDefaultRangeStart);
@@ -124,6 +127,44 @@ export default function ReservasPage() {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => {
+              if (filtered.length === 0) {
+                toast("No hay reservas para exportar.", "info");
+                return;
+              }
+              downloadCsv(
+                "reservas",
+                [
+                  "Huésped",
+                  "Propiedad",
+                  "Check-in",
+                  "Check-out",
+                  "Plataforma",
+                  "Estado",
+                  "Pago",
+                  "Monto",
+                ],
+                filtered.map((r) => [
+                  r.guestName,
+                  propertyName(r.propertyId),
+                  r.checkIn,
+                  r.checkOut,
+                  r.platform,
+                  r.status,
+                  r.paymentStatus,
+                  String(r.amount),
+                ])
+              );
+              toast(`Exportadas ${filtered.length} reservas.`, "success");
+            }}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Exportar
+          </Button>
           <Button
             variant="ghost"
             size="sm"

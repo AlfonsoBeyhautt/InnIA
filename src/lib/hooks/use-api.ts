@@ -126,3 +126,8 @@ export async function apiPatch<T>(url: string, body: unknown): Promise<T> {
   });
   return parseJsonResponse<T>(res);
 }
+
+export async function apiDelete<T = void>(url: string): Promise<T> {
+  const res = await fetch(url, { method: "DELETE" });
+  return parseJsonResponse<T>(res);
+}

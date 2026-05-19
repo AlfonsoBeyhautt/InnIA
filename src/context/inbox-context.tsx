@@ -15,6 +15,7 @@ import {
   formatTimestamp,
 } from "@/lib/inbox-ai";
 import { apiPost } from "@/lib/hooks/use-api";
+import { DEMO_PROPERTY_IDS } from "@/lib/demo/constants";
 import { filterByProperty } from "@/lib/utils";
 import { useProperty } from "@/context/property-context";
 import type { Conversation, Message, Urgency } from "@/types";
@@ -42,6 +43,8 @@ type InboxContextValue = {
   sendAiReply: (conversationId: string, options?: { force?: boolean }) => void;
   runAutoReplyIfPossible: (conversationId: string) => Promise<void>;
   markAsRead: (conversationId: string) => void;
+  markResolved: (conversationId: string) => Promise<void>;
+  createTaskFromConversation: (conversationId: string) => Promise<void>;
   mobileShowList: boolean;
   setMobileShowList: (v: boolean) => void;
   refetch: () => Promise<void>;
@@ -311,6 +314,46 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     [updateConversation]
   );
 
+  const markResolved = useCallback(
+    async (conversationId: string) => {
+      updateConversation(conversationId, (c) => ({
+        ...c,
+        unread: false,
+        urgency: "normal",
+        labels: c.labels.filter(
+          (l) => l !== "Requiere revisión" && l !== "Urgente"
+        ) as Conversation["labels"],
+      }));
+      try {
+        await fetch(`/api/conversations/${conversationId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ unread: false, priority: "normal" }),
+        });
+      } catch {
+        /* local state already updated */
+      }
+    },
+    [updateConversation]
+  );
+
+  const createTaskFromConversation = useCallback(
+    async (conversationId: string) => {
+      const conv = items.find((c) => c.id === conversationId);
+      if (!conv) return;
+      await apiPost("/api/tasks", {
+        propertyDbId:
+          conv.propertyDbId ??
+          DEMO_PROPERTY_IDS[conv.propertyId as keyof typeof DEMO_PROPERTY_IDS],
+        title: `Seguimiento: ${conv.guestName}`,
+        type: "mantenimiento",
+        description: conv.lastMessage,
+        status: "Pendiente",
+      });
+    },
+    [items]
+  );
+
   const handleSelect = useCallback(
     (id: string | null) => {
       setSelectedId(id);
@@ -342,6 +385,8 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     sendAiReply,
     runAutoReplyIfPossible,
     markAsRead,
+    markResolved,
+    createTaskFromConversation,
     mobileShowList,
     setMobileShowList,
     refetch,

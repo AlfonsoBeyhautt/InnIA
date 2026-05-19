@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   FileText,
@@ -27,6 +28,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { apiPatch } from "@/lib/hooks/use-api";
+import { filterGuests, type GuestFilters } from "@/lib/guest-filters";
+import { GuestFormDialog } from "@/components/crm/guest-form-dialog";
+import { IntegrationRequiredDialog } from "@/components/shared/integration-required-dialog";
 
 const validationVariant: Record<
   GuestValidationStatus,
@@ -46,9 +50,14 @@ const validationLabel: Record<GuestValidationStatus, string> = {
 export function GuestDatabase({
   guests,
   onSave,
+  onFilteredChange,
+  openAddSignal,
 }: {
   guests: Guest[];
   onSave?: () => void;
+  onFilteredChange?: (filtered: Guest[]) => void;
+  /** Increment from parent to open “Agregar huésped”. */
+  openAddSignal?: number;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(guests[0]?.id ?? null);
   const [search, setSearch] = useState("");
@@ -58,57 +67,82 @@ export function GuestDatabase({
   const [nationalityFilter, setNationalityFilter] = useState<string>("all");
   const [marketingFilter, setMarketingFilter] = useState<string>("all");
   const [recurrentFilter, setRecurrentFilter] = useState<string>("all");
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
+  const [integrationOpen, setIntegrationOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    return guests.filter((g) => {
-      const q = search.toLowerCase().trim();
-      const matchSearch =
-        !q ||
-        g.fullName.toLowerCase().includes(q) ||
-        g.name.toLowerCase().includes(q) ||
-        g.email?.toLowerCase().includes(q) ||
-        g.documentId?.toLowerCase().includes(q) ||
-        g.passportNumber?.toLowerCase().includes(q) ||
-        (g.phone?.replace(/\s/g, "").includes(q.replace(/\s/g, "")) ?? false);
-      const matchStatus =
-        statusFilter === "all" || g.validationStatus === statusFilter;
-      const matchPlatform =
-        platformFilter === "all" || g.originPlatform === platformFilter;
-      const matchProperty =
-        propertyFilter === "all" || g.preferredPropertyId === propertyFilter;
-      const matchNationality =
-        nationalityFilter === "all" ||
-        g.nationality?.toLowerCase() === nationalityFilter.toLowerCase();
-      const matchMarketing =
-        marketingFilter === "all" ||
-        (marketingFilter === "yes" && g.marketingConsent) ||
-        (marketingFilter === "no" && !g.marketingConsent);
-      const matchRecurrent =
-        recurrentFilter === "all" ||
-        (recurrentFilter === "yes" && g.totalStays > 1) ||
-        (recurrentFilter === "no" && g.totalStays <= 1);
-      return (
-        matchSearch &&
-        matchStatus &&
-        matchPlatform &&
-        matchProperty &&
-        matchNationality &&
-        matchMarketing &&
-        matchRecurrent
-      );
-    });
-  }, [
-    guests,
-    search,
-    statusFilter,
-    platformFilter,
-    propertyFilter,
-    nationalityFilter,
-    marketingFilter,
-    recurrentFilter,
-  ]);
+  const filterState: GuestFilters = useMemo(
+    () => ({
+      search,
+      status: statusFilter,
+      platform: platformFilter,
+      property: propertyFilter,
+      nationality: nationalityFilter,
+      marketing: marketingFilter,
+      recurrent: recurrentFilter,
+    }),
+    [
+      search,
+      statusFilter,
+      platformFilter,
+      propertyFilter,
+      nationalityFilter,
+      marketingFilter,
+      recurrentFilter,
+    ]
+  );
 
-  const selected = filtered.find((g) => g.id === selectedId) ?? filtered[0] ?? null;
+  const filtered = useMemo(
+    () => filterGuests(guests, filterState),
+    [guests, filterState]
+  );
+
+  const nationalities = useMemo(() => {
+    const set = new Set(guests.map((g) => g.nationality).filter(Boolean) as string[]);
+    return Array.from(set).sort();
+  }, [guests]);
+
+  useEffect(() => {
+    onFilteredChange?.(filtered);
+  }, [filtered, onFilteredChange]);
+
+  useEffect(() => {
+    if (openAddSignal && openAddSignal > 0) {
+      setEditingGuest(null);
+      setFormOpen(true);
+    }
+  }, [openAddSignal]);
+
+  useEffect(() => {
+    if (filtered.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+    if (!selectedId || !filtered.some((g) => g.id === selectedId)) {
+      setSelectedId(filtered[0].id);
+    }
+  }, [filtered, selectedId]);
+
+  const selected = filtered.find((g) => g.id === selectedId) ?? null;
+
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setPlatformFilter("all");
+    setPropertyFilter("all");
+    setNationalityFilter("all");
+    setMarketingFilter("all");
+    setRecurrentFilter("all");
+  };
+
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    statusFilter !== "all" ||
+    platformFilter !== "all" ||
+    propertyFilter !== "all" ||
+    nationalityFilter !== "all" ||
+    marketingFilter !== "all" ||
+    recurrentFilter !== "all";
 
   return (
     <div className="flex min-h-[calc(100vh-12rem)] gap-0 overflow-hidden rounded-2xl border border-primary/12 bg-card shadow-sm">
@@ -165,9 +199,11 @@ export function GuestDatabase({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="Uruguay">Uruguay</SelectItem>
-                <SelectItem value="Argentina">Argentina</SelectItem>
-                <SelectItem value="Brasil">Brasil</SelectItem>
+                {nationalities.map((n) => (
+                  <SelectItem key={n} value={n}>
+                    {n}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={marketingFilter} onValueChange={setMarketingFilter}>
@@ -191,11 +227,27 @@ export function GuestDatabase({
               </SelectContent>
             </Select>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {filtered.length} registro{filtered.length !== 1 ? "s" : ""}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              {filtered.length} registro{filtered.length !== 1 ? "s" : ""}
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
         </div>
         <ScrollArea className="flex-1">
+          {filtered.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">
+              No hay huéspedes con estos filtros.
+            </p>
+          ) : (
           <ul className="divide-y divide-border/60">
             {filtered.map((g) => (
               <li key={g.id}>
@@ -236,10 +288,38 @@ export function GuestDatabase({
               </li>
             ))}
           </ul>
+          )}
         </ScrollArea>
       </div>
 
-        <GuestDetailPanel guest={selected} onSave={onSave} />
+      <GuestDetailPanel
+        guest={selected}
+        onSave={onSave}
+        onEdit={() => {
+          if (selected) {
+            setEditingGuest(selected);
+            setFormOpen(true);
+          }
+        }}
+        onNewReservation={() => setIntegrationOpen(true)}
+      />
+
+      <GuestFormDialog
+        open={formOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setEditingGuest(null);
+        }}
+        guest={editingGuest}
+        onSaved={() => onSave?.()}
+      />
+
+      <IntegrationRequiredDialog
+        open={integrationOpen}
+        onOpenChange={setIntegrationOpen}
+        service="calendario de reservas (Airbnb / Booking)"
+        description="Crear reservas desde aquí requiere conectar tu calendario o PMS en Integraciones."
+      />
     </div>
   );
 }
@@ -247,9 +327,13 @@ export function GuestDatabase({
 function GuestDetailPanel({
   guest,
   onSave,
+  onEdit,
+  onNewReservation,
 }: {
   guest: Guest | null;
   onSave?: () => void;
+  onEdit?: () => void;
+  onNewReservation?: () => void;
 }) {
   if (!guest) {
     return (
@@ -285,7 +369,10 @@ function GuestDetailPanel({
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              Editar
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -302,7 +389,12 @@ function GuestDetailPanel({
             >
               Marcar validado
             </Button>
-            <Button size="sm">Nueva reserva</Button>
+            <Button size="sm" onClick={onNewReservation}>
+              Nueva reserva
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/app/inbox">Ver mensajes</Link>
+            </Button>
           </div>
         </div>
 

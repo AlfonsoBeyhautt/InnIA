@@ -47,6 +47,16 @@ export interface Property {
   checkOutTime?: string;
 }
 
+export interface Unit {
+  id: string;
+  propertyDbId: string;
+  slug: string;
+  name: string;
+  capacity: number;
+  status: "disponible" | "ocupada" | "limpieza" | "mantenimiento";
+  notes?: string;
+}
+
 export type GuestValidationStatus = "validado" | "pendiente" | "rechazado";
 
 export interface GuestReservationHistory {
