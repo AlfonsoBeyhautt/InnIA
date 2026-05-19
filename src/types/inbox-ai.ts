@@ -10,7 +10,9 @@ export interface AiAnalysis {
   reason: string;
   canAutoSend: boolean;
   detectedIntent: string;
+  confidence?: number;
   autoSentAt?: string;
+  propertySlug?: string;
 }
 
 export type InboxConversationState = {

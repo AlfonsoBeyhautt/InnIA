@@ -10,11 +10,9 @@ import {
   type ReactNode,
 } from "react";
 import { conversations as mockConversations } from "@/data/mock";
-import {
-  analyzeGuestMessage,
-  formatTimestamp,
-} from "@/lib/inbox-ai";
+import { formatTimestamp } from "@/lib/inbox-ai";
 import { apiPost } from "@/lib/hooks/use-api";
+import { useToast } from "@/context/toast-context";
 import { DEMO_PROPERTY_IDS } from "@/lib/demo/constants";
 import { filterByProperty } from "@/lib/utils";
 import { useProperty } from "@/context/property-context";
@@ -41,7 +39,8 @@ type InboxContextValue = {
   getAnalysis: (id: string) => AiAnalysis | null;
   sendOwnerMessage: (conversationId: string, content: string) => Promise<void>;
   sendAiReply: (conversationId: string, options?: { force?: boolean }) => void;
-  runAutoReplyIfPossible: (conversationId: string) => Promise<void>;
+  processWithAi: (conversationId: string) => Promise<void>;
+  aiProcessingId: string | null;
   markAsRead: (conversationId: string) => void;
   markResolved: (conversationId: string) => Promise<void>;
   createTaskFromConversation: (conversationId: string) => Promise<void>;
@@ -82,7 +81,18 @@ function decisionToStatus(decision: string): AiResponseStatus {
   }
 }
 
+type AiProcessApiResult = {
+  decision: string;
+  confidence: number;
+  generatedResponse: string;
+  usedKnowledge: string[];
+  missingInformation: string[];
+  reason: string;
+  autoSent: boolean;
+};
+
 export function InboxProvider({ children }: { children: ReactNode }) {
+  const { toast } = useToast();
   const { selectedProperty } = useProperty();
   const [items, setItems] = useState<Conversation[]>(mockConversations);
   const [loading, setLoading] = useState(true);
@@ -93,6 +103,7 @@ export function InboxProvider({ children }: { children: ReactNode }) {
   const [aiPanelOpen, setAiPanelOpen] = useState(true);
   const [aiPanelExpanded, setAiPanelExpanded] = useState(false);
   const [mobileShowList, setMobileShowList] = useState(true);
+  const [aiProcessingId, setAiProcessingId] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -170,64 +181,57 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     }));
   }, [updateConversation]);
 
-  const runAutoReplyIfPossible = useCallback(
+  const processWithAi = useCallback(
     async (conversationId: string) => {
       const conv = items.find((c) => c.id === conversationId);
       if (!conv) return;
 
-      const last = conv.messages[conv.messages.length - 1];
-      if (last?.sender !== "guest") return;
+      const lastGuest = [...conv.messages].reverse().find((m) => m.sender === "guest");
+      if (!lastGuest) {
+        toast("No hay un mensaje del huésped para procesar.", "error");
+        return;
+      }
 
+      setAiProcessingId(conversationId);
       try {
-        const result = await apiPost<{
-          decision: string;
-          response: string;
-          usedKnowledge: string[];
-          missingInformation: string[];
-          autoSent: boolean;
-        }>("/api/ai/process-message", {
+        const result = await apiPost<AiProcessApiResult>("/api/ai/process-message", {
           conversationId,
-          messageId: last.id,
+          messageId: lastGuest.id,
         });
 
         const status = decisionToStatus(result.decision);
         const analysis: AiAnalysis = {
           status,
-          suggestedResponse: result.response,
+          suggestedResponse: result.generatedResponse,
           sourcesUsed: result.usedKnowledge,
           missingTopics: result.missingInformation,
-          reason:
-            status === "auto_sent"
-              ? "La IA respondió automáticamente con la información disponible."
-              : result.missingInformation.join(" ") || "Requiere revisión humana.",
-          canAutoSend: result.autoSent,
-          detectedIntent: "general",
+          reason: result.reason,
+          confidence: result.confidence,
+          canAutoSend: result.decision === "auto_responder",
+          detectedIntent: result.decision === "escalar_dueno" ? "urgencia" : "general",
           autoSentAt: result.autoSent ? formatTimestamp() : undefined,
+          propertySlug: conv.propertyId,
         };
         setAnalysis(conversationId, analysis);
-        if (result.autoSent) await refetch();
-      } catch {
-        const analysis = analyzeGuestMessage(conv);
-        setAnalysis(conversationId, analysis);
-        if (analysis.canAutoSend && analysis.status === "auto_sent") {
-          const aiMessage: Message = {
-            id: `m-${Date.now()}`,
-            conversationId,
-            sender: "ai",
-            content: analysis.suggestedResponse,
-            timestamp: formatTimestamp(),
-          };
-          updateConversation(conversationId, (c) => ({
-            ...c,
-            messages: [...c.messages, aiMessage],
-            lastMessage: analysis.suggestedResponse.slice(0, 80),
-            lastMessageAt: "Ahora",
-            unread: false,
-          }));
+        await refetch();
+
+        if (result.autoSent) {
+          toast("Respuesta enviada automáticamente por IA.", "success");
+        } else if (result.decision === "informacion_insuficiente") {
+          toast("Información insuficiente. Completá la base de conocimiento.", "info");
+        } else if (result.decision === "escalar_dueno") {
+          toast("Caso escalado — requiere tu atención.", "error");
+        } else {
+          toast("Respuesta sugerida lista para revisión.", "info");
         }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "No se pudo procesar con IA";
+        toast(msg, "error");
+      } finally {
+        setAiProcessingId(null);
       }
     },
-    [items, setAnalysis, updateConversation, refetch]
+    [items, setAnalysis, refetch, toast]
   );
 
   const sendOwnerMessage = useCallback(
@@ -266,40 +270,37 @@ export function InboxProvider({ children }: { children: ReactNode }) {
   );
 
   const sendAiReply = useCallback(
-    (conversationId: string, options?: { force?: boolean }) => {
-      const conv = items.find((c) => c.id === conversationId);
-      if (!conv) return;
-      let analysis = analyses[conversationId] ?? analyzeGuestMessage(conv);
-      if (!analysis.suggestedResponse) return;
-      if (!options?.force && !analysis.canAutoSend && analysis.status === "insufficient_info")
-        return;
+    async (conversationId: string) => {
+      const analysis = analyses[conversationId];
+      if (!analysis?.suggestedResponse.trim()) return;
 
-      const aiMessage: Message = {
-        id: `m-${Date.now()}`,
-        conversationId,
-        sender: "ai",
-        content: analysis.suggestedResponse,
-        timestamp: formatTimestamp(),
-      };
-
-      analysis = {
-        ...analysis,
-        status: options?.force ? "needs_review" : "auto_sent",
-        autoSentAt: formatTimestamp(),
-      };
-
-      updateConversation(conversationId, (c) => ({
-        ...c,
-        messages: [...c.messages, aiMessage],
-        lastMessage: analysis.suggestedResponse.slice(0, 80),
-        lastMessageAt: "Ahora",
-        unread: false,
-        labels: mergeLabels(c, { ...analysis, status: "auto_sent" }),
-        urgency: "normal",
-      }));
-      setAnalysis(conversationId, analysis);
+      try {
+        const res = await apiPost<{ conversation: Conversation }>(
+          `/api/conversations/${conversationId}/messages`,
+          {
+            body: analysis.suggestedResponse,
+            senderType: "ai",
+            senderName: "InnIA",
+            aiGenerated: true,
+            aiAutoSent: false,
+          }
+        );
+        if (res.conversation) {
+          setItems((prev) =>
+            prev.map((c) => (c.id === conversationId ? res.conversation : c))
+          );
+        }
+        setAnalysis(conversationId, {
+          ...analysis,
+          status: "auto_sent",
+          autoSentAt: formatTimestamp(),
+        });
+        toast("Respuesta enviada al huésped.", "success");
+      } catch {
+        toast("No se pudo enviar la respuesta.", "error");
+      }
     },
-    [items, analyses, setAnalysis, updateConversation]
+    [analyses, setAnalysis, toast]
   );
 
   const markAsRead = useCallback(
@@ -360,10 +361,9 @@ export function InboxProvider({ children }: { children: ReactNode }) {
       if (id) {
         markAsRead(id);
         setMobileShowList(false);
-        void runAutoReplyIfPossible(id);
       }
     },
-    [markAsRead, runAutoReplyIfPossible]
+    [markAsRead]
   );
 
   const value: InboxContextValue = {
@@ -383,7 +383,8 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     getAnalysis,
     sendOwnerMessage,
     sendAiReply,
-    runAutoReplyIfPossible,
+    processWithAi,
+    aiProcessingId,
     markAsRead,
     markResolved,
     createTaskFromConversation,

@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Loader2,
   Sparkles,
   Zap,
 } from "lucide-react";
@@ -53,13 +54,15 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
     setAiPanelOpen,
     aiPanelExpanded,
     setAiPanelExpanded,
-    runAutoReplyIfPossible,
+    processWithAi,
+    aiProcessingId,
     sendAiReply,
   } = useInbox();
 
   const isSheet = variant === "sheet";
 
   const analysis = selected ? getAnalysis(selected.id) : null;
+  const isProcessing = selected ? aiProcessingId === selected.id : false;
   const status = analysis?.status ?? "idle";
   const config = statusConfig[status];
   const StatusIcon = config.icon;
@@ -158,6 +161,11 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
                       Enviado automáticamente a las {analysis.autoSentAt}
                     </p>
                   )}
+                  {analysis?.confidence != null && status !== "idle" && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      Confianza: {Math.round(analysis.confidence * 100)}%
+                    </p>
+                  )}
                   {analysis?.reason && (
                     <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
                       {analysis.reason}
@@ -192,9 +200,9 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
                   ))}
                 </ul>
                 <Button asChild variant="outline" size="sm" className="mt-2 h-7 w-full text-[10px]">
-                  <Link href="/app/reportes">
+                  <Link href="/app/propiedades">
                     <BookOpen className="mr-1 h-3 w-3" />
-                    Completar en Base IA
+                    Actualizar en Propiedades
                   </Link>
                 </Button>
               </div>
@@ -213,21 +221,28 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
               <Button
                 size="sm"
                 className="h-8 w-full gap-1.5 text-[11px]"
-                disabled={!selected}
-                onClick={() => selected && runAutoReplyIfPossible(selected.id)}
+                disabled={!selected || isProcessing}
+                onClick={() => selected && void processWithAi(selected.id)}
               >
-                <Zap className="h-3.5 w-3.5" />
-                Procesar con IA
+                {isProcessing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Zap className="h-3.5 w-3.5" />
+                )}
+                {isProcessing ? "Procesando…" : "Procesar con IA"}
               </Button>
               {analysis?.suggestedResponse &&
-                (analysis.status === "needs_review" || analysis.status === "insufficient_info") && (
+                !analysis.autoSentAt &&
+                (analysis.status === "needs_review" ||
+                  analysis.status === "insufficient_info") && (
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-8 w-full text-[11px]"
-                    onClick={() => selected && sendAiReply(selected.id, { force: true })}
+                    disabled={isProcessing}
+                    onClick={() => selected && void sendAiReply(selected.id)}
                   >
-                    Enviar respuesta manualmente
+                    Enviar respuesta sugerida
                   </Button>
                 )}
             </div>

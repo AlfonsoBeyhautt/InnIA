@@ -11,11 +11,14 @@ export async function POST(req: NextRequest, { params }: Params) {
   return withAuthApiHandler(async () => {
     const { id } = await params;
     const body = await req.json();
+    const senderType = body.senderType ?? "owner";
     const msg = await sendMessage({
       conversationId: id,
-      senderType: body.senderType ?? "owner",
+      senderType,
       body: body.body,
       senderName: body.senderName,
+      aiGenerated: body.aiGenerated ?? senderType === "ai",
+      aiAutoSent: body.aiAutoSent ?? false,
     });
     const conv = await getConversationById(id);
     return jsonOk({ message: mapMessage(msg), conversation: conv });
