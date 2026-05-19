@@ -1,0 +1,434 @@
+import type {
+  ActivityItem,
+  Conversation,
+  FinancialTransaction,
+  Guest,
+  Insight,
+  LockAccessEvent,
+  OperationTask,
+  Property,
+  Reservation,
+  SmartLock,
+} from "@/types";
+
+export const properties: Property[] = [
+  {
+    id: "pdd",
+    name: "Casa Punta del Diablo",
+    location: "Punta del Diablo, Rocha",
+    image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80",
+    status: "ocupada",
+    occupancy: 82,
+    platforms: ["Airbnb", "Booking", "WhatsApp"],
+    smartLockOnline: true,
+    wifi: "InnIA_PDD · clave: playa2024",
+    houseRules: "No fiestas. Mascotas con aviso previo. Silencio después de las 23:00.",
+    checkInInstructions: "Código de cerradura enviado 24 h antes. Llaves de respaldo en lockbox.",
+    checkOutInstructions: "Check-out 10:00. Dejar llaves en mesa de entrada.",
+  },
+  {
+    id: "rocha",
+    name: "Cabaña Rocha",
+    location: "La Paloma, Rocha",
+    image: "https://images.unsplash.com/photo-1518780664697-55e3ad07bfda?w=600&q=80",
+    status: "limpieza",
+    occupancy: 65,
+    platforms: ["Airbnb", "Directa"],
+    smartLockOnline: true,
+    wifi: "Rocha_Cabin · invitado123",
+    houseRules: "Máximo 6 huéspedes. Parrillero disponible hasta las 22:00.",
+    checkInInstructions: "Self check-in. Instrucciones en PDF enviado por IA.",
+    checkOutInstructions: "Sacar basura al contenedor exterior. Apagar calefón.",
+  },
+  {
+    id: "paloma",
+    name: "Apartamento La Paloma",
+    location: "La Paloma, Rocha",
+    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80",
+    status: "disponible",
+    occupancy: 71,
+    platforms: ["Booking", "Email", "WhatsApp"],
+    smartLockOnline: false,
+    wifi: "LaPaloma_Apt · apto404",
+    houseRules: "Edificio familiar. Ascensor hasta piso 4.",
+    checkInInstructions: "Portero notificado. Código en app de cerradura.",
+    checkOutInstructions: "Dejar llaves con portero si sale antes de las 9:00.",
+  },
+];
+
+export const guests: Guest[] = [
+  {
+    id: "g1",
+    name: "Martín García",
+    fullName: "Martín Alejandro García",
+    email: "martin.garcia@gmail.com",
+    phone: "+598 99 123 456",
+    documentId: "CI 3.456.789-0",
+    nationality: "Uruguay",
+    originPlatform: "Airbnb",
+    tags: ["familia", "recurrente"],
+    preferences: ["Check-in tardío", "Cuna bebé"],
+    internalNotes: "Huésped confiable. Tercera estadía.",
+    observations: "Prefiere contacto por WhatsApp.",
+    validationStatus: "validado",
+    marketingConsent: true,
+    preferredPropertyId: "pdd",
+    totalStays: 3,
+    lastStay: "May 2026",
+    paymentsTotal: 2940,
+    reservationHistory: [
+      { id: "r1", propertyId: "pdd", unitId: "pdd-1", checkIn: "2026-05-17", checkOut: "2026-05-21", platform: "Airbnb", amount: 980, status: "check-in" },
+    ],
+    incidents: [],
+    reviews: [{ rating: 5, text: "Excelente estadía, muy recomendable.", date: "Mar 2026", platform: "Airbnb" }],
+    rentalData: { purpose: "Turismo familiar", emergencyContact: "+598 99 111 222", adults: 4, children: 2 },
+  },
+  {
+    id: "g2",
+    name: "Lucía Fernández",
+    fullName: "Lucía María Fernández",
+    email: "lucia.f@outlook.com",
+    phone: "+54 11 5555 8899",
+    documentId: "DNI 28.456.123",
+    nationality: "Argentina",
+    originPlatform: "Booking",
+    tags: ["pareja", "internacional"],
+    preferences: ["Estacionamiento"],
+    internalNotes: "Incidente cerradura mayo 2026 — seguimiento.",
+    observations: "Viaja en pareja sin mascotas.",
+    validationStatus: "validado",
+    marketingConsent: true,
+    preferredPropertyId: "paloma",
+    totalStays: 2,
+    lastStay: "May 2026",
+    paymentsTotal: 840,
+    reservationHistory: [
+      { id: "r2", propertyId: "paloma", unitId: "paloma-1", checkIn: "2026-05-17", checkOut: "2026-05-20", platform: "Booking", amount: 420, status: "check-in" },
+    ],
+    incidents: [{ date: "17 may 2026", text: "Código cerradura fallido ×2", severity: "alta" }],
+    reviews: [{ rating: 4, text: "Buena ubicación.", date: "Abr 2026", platform: "Booking" }],
+    rentalData: { purpose: "Escapada fin de semana", emergencyContact: "+54 11 4444 3322", adults: 2 },
+  },
+  {
+    id: "g3",
+    name: "Diego y Ana",
+    fullName: "Diego Rodríguez / Ana Silva",
+    email: "diego.rodriguez@email.com",
+    phone: "+598 94 777 888",
+    documentId: "CI 2.111.222-3",
+    nationality: "Uruguay",
+    originPlatform: "Directa",
+    tags: ["pareja", "directa"],
+    preferences: ["Parrillero", "Late checkout domingo"],
+    validationStatus: "pendiente",
+    marketingConsent: false,
+    preferredPropertyId: "rocha",
+    totalStays: 1,
+    lastStay: "May 2026",
+    paymentsTotal: 375,
+    reservationHistory: [
+      { id: "r3", propertyId: "rocha", unitId: "rocha-1", checkIn: "2026-05-18", checkOut: "2026-05-22", platform: "Directa", amount: 750, status: "confirmada" },
+    ],
+    incidents: [],
+    reviews: [],
+    rentalData: { purpose: "Turismo", emergencyContact: "+598 99 000 111", adults: 2 },
+  },
+  {
+    id: "g4",
+    name: "Carla P.",
+    fullName: "Carla Pérez",
+    email: "carla.perez@gmail.com",
+    phone: "+598 98 333 444",
+    documentId: "Pasaporte AAB123456",
+    nationality: "Chile",
+    originPlatform: "Airbnb",
+    tags: ["solitaria", "recurrente"],
+    preferences: ["WiFi estable", "Trabajo remoto"],
+    internalNotes: "4 estadías. Buena comunicación.",
+    validationStatus: "validado",
+    marketingConsent: true,
+    totalStays: 4,
+    lastStay: "May 2026",
+    paymentsTotal: 2100,
+    reservationHistory: [
+      { id: "r5", propertyId: "rocha", unitId: "rocha-1", checkIn: "2026-05-22", checkOut: "2026-05-25", platform: "Airbnb", amount: 620, status: "confirmada" },
+      { id: "r6", propertyId: "paloma", unitId: "paloma-2", checkIn: "2026-05-25", checkOut: "2026-05-28", platform: "Directa", amount: 380, status: "pendiente" },
+    ],
+    incidents: [],
+    reviews: [{ rating: 5, text: "Perfecto para teletrabajo.", date: "Feb 2026", platform: "Airbnb" }],
+    rentalData: { purpose: "Trabajo remoto", emergencyContact: "+56 9 8765 4321", adults: 1 },
+  },
+  {
+    id: "g5",
+    name: "Juan Pérez",
+    fullName: "Juan Pablo Pérez",
+    email: "juan.perez@empresa.uy",
+    phone: "+598 99 555 666",
+    documentId: "CI 4.789.012-1",
+    nationality: "Uruguay",
+    originPlatform: "WhatsApp",
+    tags: ["negocios"],
+    observations: "Requiere factura con RUT.",
+    validationStatus: "pendiente",
+    marketingConsent: false,
+    preferredPropertyId: "pdd",
+    totalStays: 1,
+    lastStay: "May 2026",
+    paymentsTotal: 0,
+    reservationHistory: [
+      { id: "r4", propertyId: "pdd", unitId: "pdd-2", checkIn: "2026-05-20", checkOut: "2026-05-23", platform: "WhatsApp", amount: 540, status: "confirmada" },
+    ],
+    incidents: [],
+    reviews: [],
+    rentalData: { purpose: "Viaje laboral", emergencyContact: "+598 99 777 888", adults: 1 },
+  },
+  {
+    id: "g6",
+    name: "Sofía Martínez",
+    fullName: "Sofía Martínez López",
+    email: "sofia.ml@hotmail.com",
+    phone: "+598 91 222 333",
+    documentId: "CI 5.012.345-6",
+    nationality: "Uruguay",
+    originPlatform: "Booking",
+    tags: ["familia"],
+    validationStatus: "validado",
+    marketingConsent: true,
+    preferredPropertyId: "pdd",
+    totalStays: 2,
+    lastStay: "Abr 2026",
+    paymentsTotal: 1560,
+    reservationHistory: [
+      { id: "r7", propertyId: "pdd", unitId: "pdd-3", checkIn: "2026-05-14", checkOut: "2026-05-17", platform: "Booking", amount: 720, status: "check-out" },
+    ],
+    incidents: [],
+    reviews: [{ rating: 4, text: "Muy cómodo para familias.", date: "Abr 2026", platform: "Booking" }],
+    rentalData: { purpose: "Vacaciones", emergencyContact: "+598 99 222 111", adults: 3, children: 1 },
+  },
+];
+
+export const reservations: Reservation[] = [
+  { id: "r1", propertyId: "pdd", unitId: "pdd-1", guestId: "g1", guestName: "Martín García", guestCount: 4, platform: "Airbnb", checkIn: "2026-05-17", checkOut: "2026-05-21", status: "check-in", paymentStatus: "pagado", lockCodeStatus: "activo", amount: 980 },
+  { id: "r2", propertyId: "paloma", unitId: "paloma-1", guestId: "g2", guestName: "Lucía Fernández", guestCount: 2, platform: "Booking", checkIn: "2026-05-17", checkOut: "2026-05-20", status: "check-in", paymentStatus: "pagado", lockCodeStatus: "activo", amount: 420 },
+  { id: "r3", propertyId: "rocha", unitId: "rocha-1", guestId: "g3", guestName: "Diego y Ana", guestCount: 2, platform: "Directa", checkIn: "2026-05-18", checkOut: "2026-05-22", status: "confirmada", paymentStatus: "parcial", lockCodeStatus: "pendiente", amount: 750 },
+  { id: "r4", propertyId: "pdd", unitId: "pdd-2", guestId: "g5", guestName: "Juan Pérez", guestCount: 1, platform: "WhatsApp", checkIn: "2026-05-20", checkOut: "2026-05-23", status: "confirmada", paymentStatus: "pendiente", lockCodeStatus: "pendiente", amount: 540 },
+  { id: "r5", propertyId: "rocha", unitId: "rocha-1", guestId: "g4", guestName: "Carla P.", guestCount: 1, platform: "Airbnb", checkIn: "2026-05-22", checkOut: "2026-05-25", status: "confirmada", paymentStatus: "pagado", lockCodeStatus: "pendiente", amount: 620 },
+  { id: "r6", propertyId: "paloma", unitId: "paloma-2", guestId: "g4", guestName: "Carla P.", guestCount: 1, platform: "Directa", checkIn: "2026-05-25", checkOut: "2026-05-28", status: "pendiente", paymentStatus: "pendiente", lockCodeStatus: "pendiente", amount: 380 },
+  { id: "r7", propertyId: "pdd", unitId: "pdd-3", guestId: "g6", guestName: "Sofía Martínez", guestCount: 3, platform: "Booking", checkIn: "2026-05-14", checkOut: "2026-05-17", status: "check-out", paymentStatus: "pagado", lockCodeStatus: "expirado", amount: 720 },
+];
+
+const baseMessages = (convId: string): Conversation["messages"] => [
+  { id: "m1", conversationId: convId, sender: "guest", content: "Hola, ¿a qué hora puedo hacer el check-in mañana?", timestamp: "10:32" },
+  { id: "m2", conversationId: convId, sender: "ai", content: "¡Hola! El check-in es a partir de las 15:00. Te enviaré el código de la cerradura 24 h antes. ¿Necesitás algo más?", timestamp: "10:33" },
+  { id: "m3", conversationId: convId, sender: "guest", content: "Perfecto. ¿Hay estacionamiento cerca?", timestamp: "10:45" },
+];
+
+export const conversations: Conversation[] = [
+  {
+    id: "c1", guestId: "g1", guestName: "Martín y familia", propertyId: "pdd", platform: "Airbnb",
+    lastMessage: "¿Hay estacionamiento cerca?", lastMessageAt: "10:45", unread: true, urgency: "revisar",
+    labels: ["Requiere revisión", "Check-in hoy"], sentiment: "positivo", reservationId: "r1",
+    messages: baseMessages("c1"),
+  },
+  {
+    id: "c2", guestId: "g2", guestName: "Lucía Fernández", propertyId: "paloma", platform: "Booking",
+    lastMessage: "La cerradura no abre con el código", lastMessageAt: "09:12", unread: true, urgency: "urgente",
+    labels: ["Urgente", "Problema mantenimiento"], sentiment: "negativo", reservationId: "r2",
+    messages: [
+      { id: "m1", conversationId: "c2", sender: "guest", content: "La cerradura no abre con el código que me enviaron", timestamp: "09:10" },
+      { id: "m2", conversationId: "c2", sender: "ai", content: "Lamento el inconveniente. Estoy verificando el código y contactando al equipo de mantenimiento.", timestamp: "09:11" },
+    ],
+  },
+  {
+    id: "c3", guestId: "g3", guestName: "Diego y Ana", propertyId: "rocha", platform: "WhatsApp",
+    lastMessage: "Gracias por la info del parrillero", lastMessageAt: "Ayer", unread: false, urgency: "normal",
+    labels: ["Respondido por IA"], sentiment: "positivo", reservationId: "r3",
+    messages: [
+      { id: "m1", conversationId: "c3", sender: "guest", content: "¿Se puede usar el parrillero?", timestamp: "Ayer 18:00" },
+      { id: "m2", conversationId: "c3", sender: "ai", content: "Sí, el parrillero está disponible hasta las 22:00. Encontrarás carbón en el galpón.", timestamp: "Ayer 18:02" },
+      { id: "m3", conversationId: "c3", sender: "guest", content: "Gracias por la info del parrillero", timestamp: "Ayer 18:05" },
+    ],
+  },
+  {
+    id: "c4", guestId: "g5", guestName: "Juan Pérez", propertyId: "pdd", platform: "Email",
+    lastMessage: "Consulta sobre factura", lastMessageAt: "08:30", unread: true, urgency: "revisar",
+    labels: ["Requiere revisión"], sentiment: "neutral", reservationId: "r4",
+    messages: [
+      { id: "m1", conversationId: "c4", sender: "guest", content: "Necesito factura con RUT para reintegro laboral", timestamp: "08:30" },
+    ],
+  },
+  {
+    id: "c5", guestId: "g4", guestName: "Carla P.", propertyId: "rocha", platform: "Airbnb",
+    lastMessage: "¿Puedo traer mascota pequeña?", lastMessageAt: "07:15", unread: true, urgency: "revisar",
+    labels: ["Requiere revisión"], sentiment: "neutral", reservationId: "r5",
+    messages: [
+      { id: "m1", conversationId: "c5", sender: "guest", content: "¿Puedo traer mascota pequeña?", timestamp: "07:15" },
+    ],
+  },
+];
+
+export const operationTasks: OperationTask[] = [
+  { id: "t1", propertyId: "rocha", title: "Limpieza post estadía", type: "limpieza", status: "En curso", assignee: "María L.", dueDate: "17 may", checklist: [{ item: "Cambiar sábanas", done: true }, { item: "Revisar cocina", done: false }] },
+  { id: "t2", propertyId: "paloma", title: "Reparar cerradura inteligente", type: "mantenimiento", status: "Pendiente", assignee: "Técnico Sur", dueDate: "17 may" },
+  { id: "t3", propertyId: "pdd", title: "Reposición amenities", type: "limpieza", status: "Pendiente", assignee: "María L.", dueDate: "18 may" },
+  { id: "t4", propertyId: "pdd", title: "Fuga en canilla exterior", type: "mantenimiento", status: "Problema detectado", assignee: "Plomería Rocha", dueDate: "19 may" },
+  { id: "t5", propertyId: "paloma", title: "Limpieza pre check-in", type: "limpieza", status: "Completado", assignee: "Ana R.", dueDate: "16 may" },
+];
+
+export const smartLocks: SmartLock[] = [
+  { id: "l1", propertyId: "pdd", name: "Entrada principal", online: true, battery: 78, currentCode: "4829", currentGuest: "Martín y familia", validUntil: "21 may" },
+  { id: "l2", propertyId: "rocha", name: "Puerta cabaña", online: true, battery: 92, currentCode: "7731", currentGuest: "—", validUntil: "16 may" },
+  { id: "l3", propertyId: "paloma", name: "Apartamento 4B", online: false, battery: 12, currentCode: "—", currentGuest: "Lucía Fernández" },
+];
+
+export const lockAccessHistory: LockAccessEvent[] = [
+  { id: "a1", lockId: "l1", guest: "Martín y familia", action: "Código usado — entrada", timestamp: "17 may, 15:12" },
+  { id: "a2", lockId: "l1", guest: "Sistema", action: "Código generado", timestamp: "16 may, 15:00" },
+  { id: "a3", lockId: "l3", guest: "Lucía Fernández", action: "Intento fallido × 2", timestamp: "17 may, 09:08" },
+];
+
+export const transactions: FinancialTransaction[] = [
+  { id: "f1", propertyId: "pdd", date: "15 may", month: "mayo", description: "Reserva Airbnb — Martín", type: "ingreso", category: "Reserva", platform: "Airbnb", amount: 980 },
+  { id: "f2", propertyId: "rocha", date: "14 may", month: "mayo", description: "Limpieza post estadía", type: "gasto", category: "Limpieza", amount: -85 },
+  { id: "f3", propertyId: "paloma", date: "13 may", month: "mayo", description: "Reserva Booking — Lucía", type: "ingreso", category: "Reserva", platform: "Booking", amount: 420 },
+  { id: "f4", propertyId: "pdd", date: "12 may", month: "mayo", description: "Reparación canilla", type: "gasto", category: "Mantenimiento", amount: -120 },
+  { id: "f5", propertyId: "rocha", date: "10 may", month: "mayo", description: "Reserva directa — Diego", type: "ingreso", category: "Reserva", platform: "Directa", amount: 750 },
+  { id: "f6", propertyId: "pdd", date: "8 abr", month: "abril", description: "Reserva Airbnb — Ana", type: "ingreso", category: "Reserva", platform: "Airbnb", amount: 890 },
+  { id: "f7", propertyId: "paloma", date: "5 abr", month: "abril", description: "Limpieza extra", type: "gasto", category: "Limpieza", amount: -95 },
+  { id: "f8", propertyId: "rocha", date: "2 abr", month: "abril", description: "Reserva WhatsApp — Pablo", type: "ingreso", category: "Reserva", platform: "WhatsApp", amount: 680 },
+];
+
+export const insights: Insight[] = [
+  {
+    id: "i1",
+    category: "Consultas repetidas",
+    title: "Muchos huéspedes preguntan por el estacionamiento",
+    description: "Se detectaron 8 consultas similares esta semana en WhatsApp y Airbnb.",
+    type: "comunicacion",
+    priority: "alta",
+    source: "Mensajes · 8 coincidencias",
+    suggestedAction: "Crear una respuesta automática sobre estacionamiento.",
+    ctaLabel: "Crear respuesta",
+    ctaHref: "/app/inbox",
+  },
+  {
+    id: "i2",
+    category: "Información faltante",
+    title: "La IA no tiene información suficiente sobre mascotas",
+    description: "La IA pidió revisión manual en 4 conversaciones por falta de reglas claras.",
+    type: "comunicacion",
+    priority: "alta",
+    source: "Centro de mensajes · revisión manual",
+    suggestedAction: "Agregar política de mascotas a la base de conocimiento.",
+    ctaLabel: "Actualizar información",
+    ctaHref: "/app/reportes",
+  },
+  {
+    id: "i3",
+    category: "Operaciones",
+    title: "Demoras de limpieza en Apartamento La Paloma",
+    description: "Las tareas de limpieza se completaron tarde en 3 estadías recientes.",
+    type: "operaciones",
+    priority: "media",
+    source: "Tareas · 3 retrasos",
+    suggestedAction: "Revisar tiempos asignados o responsable.",
+    ctaLabel: "Ver tareas",
+    ctaHref: "/app/operaciones",
+  },
+  {
+    id: "i4",
+    category: "Experiencia del huésped",
+    title: "Comentarios positivos sobre el check-in automático",
+    description: "Los huéspedes mencionan facilidad de ingreso en reseñas recientes.",
+    type: "comunicacion",
+    priority: "baja",
+    source: "Reseñas · Airbnb y Booking",
+    suggestedAction: "Destacar check-in autónomo en publicaciones.",
+    ctaLabel: "Ver recomendación",
+    ctaHref: "/app/propiedades",
+  },
+  {
+    id: "i5",
+    category: "Reserva directa",
+    title: "Huéspedes recurrentes con potencial de reserva directa",
+    description: "Hay 5 huéspedes con buen historial y consentimiento para contacto.",
+    type: "crm",
+    priority: "media",
+    source: "CRM · 5 perfiles",
+    suggestedAction: "Enviar campaña de temporada.",
+    ctaLabel: "Crear campaña",
+    ctaHref: "/app/crm",
+  },
+];
+
+export const knowledgeBaseItems = [
+  { id: "k1", topic: "WiFi", status: "completo" as const },
+  { id: "k2", topic: "Estacionamiento", status: "faltante" as const },
+  { id: "k3", topic: "Mascotas", status: "incompleto" as const },
+  { id: "k4", topic: "Check-in", status: "completo" as const },
+  { id: "k5", topic: "Reglas de la casa", status: "incompleto" as const },
+  { id: "k6", topic: "Emergencias", status: "faltante" as const },
+];
+
+export const suggestedAutoReplies = [
+  {
+    id: "ar1",
+    question: "¿Hay estacionamiento?",
+    preview: "Sí, hay estacionamiento gratuito a 2 cuadras. Te envío la ubicación exacta.",
+    sourceCount: 8,
+  },
+  {
+    id: "ar2",
+    question: "¿Se aceptan mascotas?",
+    preview: "Las mascotas pequeñas son bienvenidas con aviso previo, según la propiedad.",
+    sourceCount: 4,
+  },
+  {
+    id: "ar3",
+    question: "¿A qué hora es el check-in?",
+    preview: "El check-in es a partir de las 15:00. Podés coordinar llegada anticipada por mensaje.",
+    sourceCount: 6,
+  },
+  {
+    id: "ar4",
+    question: "¿Cómo ingreso a la propiedad?",
+    preview: "Recibirás un código de cerradura 24 h antes del check-in con instrucciones de acceso.",
+    sourceCount: 5,
+  },
+];
+
+export const aiMissingInfoByConversation: Record<string, string[]> = {
+  c1: ["No hay información cargada sobre estacionamiento en Casa Punta del Diablo."],
+  c5: ["No hay política de mascotas definida para Cabaña Rocha."],
+  default: ["No hay información cargada sobre estacionamiento."],
+};
+
+export const activities: ActivityItem[] = [
+  { id: "a1", propertyId: "paloma", text: "IA respondió consulta de WiFi — Lucía Fernández", time: "Hace 5 min", type: "ia" },
+  { id: "a2", propertyId: "pdd", text: "Nueva reserva confirmada — Juan Pérez", time: "Hace 1 h", type: "reserva" },
+  { id: "a3", propertyId: "rocha", text: "Tarea de limpieza iniciada", time: "Hace 2 h", type: "tarea" },
+  { id: "a4", propertyId: "paloma", text: "Código de cerradura falló — requiere revisión", time: "Hace 3 h", type: "cerradura" },
+  { id: "a5", propertyId: "pdd", text: "Mensaje nuevo de Martín y familia", time: "Hace 4 h", type: "mensaje" },
+];
+
+export const financeSummary = {
+  ingresos: 8420,
+  gastos: 2180,
+  gananciaNeta: 6240,
+  gastosLimpieza: 680,
+  gastosMantenimiento: 920,
+};
+
+export const revenueByProperty = [
+  { propiedad: "Punta del Diablo", ingresos: 3200, gastos: 890 },
+  { propiedad: "Cabaña Rocha", ingresos: 2800, gastos: 620 },
+  { propiedad: "La Paloma", ingresos: 2420, gastos: 670 },
+];
+
+export const monthlyRevenue = [
+  { mes: "Ene", monto: 5200 },
+  { mes: "Feb", monto: 6100 },
+  { mes: "Mar", monto: 5800 },
+  { mes: "Abr", monto: 7200 },
+  { mes: "May", monto: 8420 },
+];

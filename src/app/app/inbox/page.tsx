@@ -1,0 +1,12 @@
+"use client";
+
+import { InboxProvider } from "@/context/inbox-context";
+import { InboxWorkspace } from "@/components/inbox/inbox-workspace";
+
+export default function InboxPage() {
+  return (
+    <InboxProvider>
+      <InboxWorkspace />
+    </InboxProvider>
+  );
+}
