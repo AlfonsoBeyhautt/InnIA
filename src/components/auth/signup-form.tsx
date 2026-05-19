@@ -15,6 +15,8 @@ function mapSignupError(message: string): string {
     return "Este email ya está registrado. Probá iniciar sesión.";
   if (m.includes("password"))
     return "La contraseña debe tener al menos 6 caracteres.";
+  if (m.includes("database error saving new user"))
+    return "Error al crear el perfil en la base de datos. Aplicá la migración 005 en Supabase o contactá soporte.";
   if (m.includes("network") || m.includes("fetch"))
     return "Error de conexión. Intentá de nuevo.";
   return message;
@@ -51,6 +53,7 @@ export function SignupForm() {
       }
 
       if (data.session) {
+        await fetch("/api/profile/ensure", { method: "POST" }).catch(() => undefined);
         router.push("/app/onboarding");
         router.refresh();
         return;
