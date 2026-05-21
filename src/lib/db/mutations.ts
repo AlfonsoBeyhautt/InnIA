@@ -428,6 +428,8 @@ export async function sendMessage(input: {
   senderName?: string;
   aiGenerated?: boolean;
   aiAutoSent?: boolean;
+  channel?: string;
+  externalMessageId?: string;
 }): Promise<Tables<"messages">> {
   const { supabase } = await authDb();
   const { data: msg, error } = await supabase
@@ -437,6 +439,8 @@ export async function sendMessage(input: {
       sender_type: input.senderType,
       sender_name: input.senderName ?? null,
       body: input.body,
+      channel: input.channel ?? null,
+      external_message_id: input.externalMessageId ?? null,
       ai_generated: input.aiGenerated ?? false,
       ai_auto_sent: input.aiAutoSent ?? false,
     })

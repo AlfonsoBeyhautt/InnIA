@@ -15,7 +15,7 @@ import { useToast } from "@/context/toast-context";
 import { DEMO_PROPERTY_IDS } from "@/lib/demo/constants";
 import { filterByProperty } from "@/lib/utils";
 import { useProperty } from "@/context/property-context";
-import type { Conversation, Message, Urgency } from "@/types";
+import type { Conversation, Urgency } from "@/types";
 import type { AiAnalysis, AiResponseStatus } from "@/types/inbox-ai";
 import { labelFromAiStatus } from "@/types/inbox-ai";
 
@@ -88,6 +88,8 @@ type AiProcessApiResult = {
   missingInformation: string[];
   reason: string;
   autoSent: boolean;
+  autoSendFailed?: boolean;
+  autoSendError?: string;
 };
 
 export function InboxProvider({ children }: { children: ReactNode }) {
@@ -208,17 +210,26 @@ export function InboxProvider({ children }: { children: ReactNode }) {
           messageId: lastGuest.id,
         });
 
-        const status = decisionToStatus(result.decision);
+        const status = result.autoSent
+          ? "auto_sent"
+          : result.autoSendFailed || result.decision === "auto_responder"
+            ? "needs_review"
+            : decisionToStatus(result.decision);
         const analysis: AiAnalysis = {
           status,
           suggestedResponse: result.generatedResponse,
           sourcesUsed: result.usedKnowledge,
           missingTopics: result.missingInformation,
-          reason: result.reason,
+          reason: result.autoSent
+            ? result.reason || "Consulta simple con confianza alta"
+            : result.reason,
           confidence: result.confidence,
           canAutoSend: result.decision === "auto_responder",
           detectedIntent: result.decision === "escalar_dueno" ? "urgencia" : "general",
           autoSentAt: result.autoSent ? formatTimestamp() : undefined,
+          autoReplyBadge: result.autoSent
+            ? "Respondido automáticamente por IA"
+            : undefined,
           propertySlug: conv.propertyId,
         };
         setAnalysis(conversationId, analysis);
@@ -226,6 +237,12 @@ export function InboxProvider({ children }: { children: ReactNode }) {
 
         if (result.autoSent) {
           toast("Respuesta enviada automáticamente por IA.", "success");
+        } else if (result.autoSendFailed) {
+          toast(
+            result.autoSendError ??
+              "No se pudo enviar la respuesta automática por WhatsApp.",
+            "error"
+          );
         } else if (result.decision === "informacion_insuficiente") {
           toast("Información insuficiente. Completá la base de conocimiento.", "info");
         } else if (result.decision === "escalar_dueno") {
@@ -273,42 +290,48 @@ export function InboxProvider({ children }: { children: ReactNode }) {
             prev.map((c) => (c.id === conversationId ? res.conversation : c))
           );
         }
-      } catch {
-        const msg: Message = {
-          id: `m-${Date.now()}`,
-          conversationId,
-          sender: "owner",
-          content: text,
-          timestamp: formatTimestamp(),
-        };
-        updateConversation(conversationId, (c) => ({
-          ...c,
-          messages: [...c.messages, msg],
-          lastMessage: text,
-          lastMessageAt: "Ahora",
-          unread: false,
-        }));
+      } catch (e) {
+        const msg =
+          e instanceof Error
+            ? e.message
+            : "No se pudo enviar el mensaje";
+        toast(msg, "error");
       }
     },
-    [updateConversation]
+    [items, toast]
   );
 
   const sendAiReply = useCallback(
     async (conversationId: string) => {
       const analysis = analyses[conversationId];
+      const conv = items.find((c) => c.id === conversationId);
       if (!analysis?.suggestedResponse.trim()) return;
 
       try {
-        const res = await apiPost<{ conversation: Conversation }>(
-          `/api/conversations/${conversationId}/messages`,
-          {
-            body: analysis.suggestedResponse,
-            senderType: "ai",
-            senderName: "InnIA",
-            aiGenerated: true,
-            aiAutoSent: false,
-          }
-        );
+        let res: { conversation: Conversation };
+        if (conv?.platform === "WhatsApp") {
+          res = await apiPost<{ conversation: Conversation }>(
+            "/api/integrations/whatsapp/send",
+            {
+              conversationId,
+              text: analysis.suggestedResponse,
+              senderType: "ai",
+              senderName: "InnIA",
+              aiGenerated: true,
+            }
+          );
+        } else {
+          res = await apiPost<{ conversation: Conversation }>(
+            `/api/conversations/${conversationId}/messages`,
+            {
+              body: analysis.suggestedResponse,
+              senderType: "ai",
+              senderName: "InnIA",
+              aiGenerated: true,
+              aiAutoSent: false,
+            }
+          );
+        }
         if (res.conversation) {
           setItems((prev) =>
             prev.map((c) => (c.id === conversationId ? res.conversation : c))
@@ -320,11 +343,15 @@ export function InboxProvider({ children }: { children: ReactNode }) {
           autoSentAt: formatTimestamp(),
         });
         toast("Respuesta enviada al huésped.", "success");
-      } catch {
-        toast("No se pudo enviar la respuesta.", "error");
+      } catch (e) {
+        const msg =
+          e instanceof Error
+            ? e.message
+            : "No se pudo enviar la respuesta.";
+        toast(msg, "error");
       }
     },
-    [analyses, setAnalysis, toast]
+    [analyses, items, setAnalysis, toast]
   );
 
   const markAsRead = useCallback(

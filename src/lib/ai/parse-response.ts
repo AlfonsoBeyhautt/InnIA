@@ -32,10 +32,47 @@ function normalizeDecision(raw: unknown): AiDecision {
   return "requiere_revision";
 }
 
+/** Owner/property knowledge gaps — NOT guest-provided details like dates */
+const OWNER_KNOWLEDGE_KEYWORDS = [
+  "wifi",
+  "estacionamiento",
+  "parking",
+  "mascota",
+  "check-in",
+  "check-out",
+  "check in",
+  "check out",
+  "cerradura",
+  "reglas",
+  "política",
+  "politica",
+  "conocimiento",
+  "base de",
+  "propiedad",
+  "instrucciones",
+  "emergencia",
+  "house rules",
+  "normas",
+];
+
+function hasOwnerKnowledgeGap(missing: string[]): boolean {
+  if (missing.length === 0) return false;
+  return missing.some((item) => {
+    const t = item.toLowerCase();
+    return OWNER_KNOWLEDGE_KEYWORDS.some((k) => t.includes(k));
+  });
+}
+
+/** Guest can provide missing details (dates, party size) — OK to auto-ask */
+function canAutoAskGuestForDetails(missing: string[]): boolean {
+  if (missing.length === 0) return true;
+  return !hasOwnerKnowledgeGap(missing);
+}
+
 /** Parse OpenAI JSON and apply server-side decision safeguards */
 export function parseAndApplyAiRules(
   rawJson: string,
-  options?: { escalationHint?: boolean }
+  options?: { escalationHint?: boolean; complaintHint?: boolean }
 ): ParsedAiResponse {
   let parsed: Record<string, unknown> = {};
   try {
@@ -75,10 +112,23 @@ export function parseAndApplyAiRules(
       ? parsed.reason.trim()
       : "Decisión del modelo de IA.";
 
-  if (options?.escalationHint && decision === "auto_responder") {
-    decision = "escalar_dueno";
-    reason = "Se detectaron señales de urgencia o riesgo en el mensaje del huésped.";
-    confidence = Math.max(confidence, 0.85);
+  if (options?.escalationHint || options?.complaintHint) {
+    if (decision === "auto_responder") {
+      decision = "escalar_dueno";
+      reason = "Se detectaron señales de urgencia, queja o situación sensible.";
+      confidence = Math.max(confidence, 0.85);
+    }
+  }
+
+  if (
+    decision === "informacion_insuficiente" &&
+    generatedResponse.trim() &&
+    canAutoAskGuestForDetails(missingInformation)
+  ) {
+    decision = "auto_responder";
+    reason +=
+      " El huésped puede aportar más detalles; la respuesta solicita información de forma natural.";
+    confidence = Math.max(confidence, AI_DECISION_THRESHOLDS.autoRespondMinConfidence);
   }
 
   if (decision === "auto_responder") {
@@ -88,16 +138,16 @@ export function parseAndApplyAiRules(
     } else if (!generatedResponse.trim()) {
       decision = "informacion_insuficiente";
       reason += " Sin texto de respuesta seguro para envío automático.";
-    } else if (missingInformation.length > 0) {
+    } else if (hasOwnerKnowledgeGap(missingInformation)) {
       decision = "informacion_insuficiente";
-      reason += " Hay información faltante en la base de conocimiento.";
+      reason += " Falta información del dueño o de la propiedad en la base de conocimiento.";
     }
   }
 
   if (
     decision === "requiere_revision" &&
     confidence < AI_DECISION_THRESHOLDS.reviewBelowConfidence &&
-    missingInformation.length > 0
+    hasOwnerKnowledgeGap(missingInformation)
   ) {
     decision = "informacion_insuficiente";
   }
@@ -112,7 +162,7 @@ export function parseAndApplyAiRules(
   };
 }
 
-/** Quick check for messages that should escalate before calling the model */
+/** Urgent / safety / complaint signals */
 export function detectEscalationSignals(message: string): boolean {
   const t = message.toLowerCase();
   const patterns = [
@@ -134,6 +184,36 @@ export function detectEscalationSignals(message: string): boolean {
     /cerradura\s+(rota|no\s+funciona)/,
     /estafa/,
     /peligro/,
+    /reembolso/i,
+    /devoluci[oó]n/,
+    /cancelar.*reserva/i,
+    /disputa/i,
   ];
   return patterns.some((p) => p.test(t));
+}
+
+export function detectComplaintSignals(message: string): boolean {
+  const t = message.toLowerCase();
+  const patterns = [
+    /queja/i,
+    /reclamo/i,
+    /p[eé]simo/i,
+    /horrible/i,
+    /asqueroso/i,
+    /sucio/i,
+    /mentira/i,
+    /estafa/i,
+    /nunca\s+m[aá]s/i,
+    /indignad/i,
+    /decepcion/i,
+    /mal[ií]simo/i,
+  ];
+  return patterns.some((p) => p.test(t));
+}
+
+export function detectCommercialProposal(message: string): boolean {
+  const t = message.toLowerCase();
+  return /propuesta|colaboraci[oó]n|publicidad|marketing|inversi[oó]n|socio\s+comercial/i.test(
+    t
+  );
 }

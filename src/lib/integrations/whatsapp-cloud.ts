@@ -1,22 +1,62 @@
 import type { WhatsAppIntegrationConfig } from "@/lib/integrations/config-types";
+import { normalizeWhatsAppPhone } from "@/lib/integrations/whatsapp/phone";
 
 const GRAPH_API = "https://graph.facebook.com/v21.0";
+
+export type WhatsAppSendResult = {
+  messageId: string;
+  httpStatus: number;
+};
+
+export class WhatsAppSendError extends Error {
+  metaCode?: number | string;
+  metaType?: string;
+  statusCode?: number;
+
+  constructor(
+    message: string,
+    meta?: { code?: number | string; type?: string; statusCode?: number }
+  ) {
+    super(message);
+    this.name = "WhatsAppSendError";
+    this.metaCode = meta?.code;
+    this.metaType = meta?.type;
+    this.statusCode = meta?.statusCode;
+  }
+}
 
 export async function sendWhatsAppTextMessage(
   config: WhatsAppIntegrationConfig,
   toPhone: string,
   body: string
-): Promise<{ messageId: string }> {
-  const phone = toPhone.replace(/\D/g, "");
-  const res = await fetch(`${GRAPH_API}/${config.phone_number_id}/messages`, {
+): Promise<WhatsAppSendResult> {
+  const phoneNumberId = String(config.phone_number_id ?? "").trim();
+  const token = config.access_token?.trim();
+
+  if (!phoneNumberId) {
+    throw new WhatsAppSendError("Phone Number ID no configurado en la integración.");
+  }
+  if (!token) {
+    throw new WhatsAppSendError(
+      "Token de WhatsApp faltante o vencido. Volvé a conectar WhatsApp."
+    );
+  }
+
+  const to = normalizeWhatsAppPhone(toPhone);
+  if (!to || to.length < 8) {
+    throw new WhatsAppSendError(`Número de destinatario inválido: ${toPhone}`);
+  }
+
+  const url = `${GRAPH_API}/${phoneNumberId}/messages`;
+  const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${config.access_token}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       messaging_product: "whatsapp",
-      to: phone,
+      to,
       type: "text",
       text: { body },
     }),
@@ -24,16 +64,32 @@ export async function sendWhatsAppTextMessage(
 
   const json = (await res.json()) as {
     messages?: { id: string }[];
-    error?: { message: string };
+    error?: {
+      message: string;
+      type?: string;
+      code?: number;
+      error_subcode?: number;
+    };
   };
 
   if (!res.ok) {
-    throw new Error(json.error?.message ?? `WhatsApp API error ${res.status}`);
+    const errMsg =
+      json.error?.message ?? `WhatsApp API error ${res.status}`;
+    throw new WhatsAppSendError(errMsg, {
+      code: json.error?.code ?? json.error?.error_subcode,
+      type: json.error?.type,
+      statusCode: res.status,
+    });
   }
 
   const messageId = json.messages?.[0]?.id;
-  if (!messageId) throw new Error("WhatsApp no devolvió ID de mensaje");
-  return { messageId };
+  if (!messageId) {
+    throw new WhatsAppSendError("WhatsApp no devolvió ID de mensaje", {
+      statusCode: res.status,
+    });
+  }
+
+  return { messageId, httpStatus: res.status };
 }
 
 export function verifyWhatsAppWebhook(

@@ -158,11 +158,16 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
                 <StatusIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
                   <Badge variant={config.variant} className="text-[9px]">
-                    {config.label}
+                    {analysis?.autoReplyBadge ?? config.label}
                   </Badge>
                   {analysis?.autoSentAt && (
                     <p className="mt-1 text-[10px] text-emerald-700">
                       Enviado automáticamente a las {analysis.autoSentAt}
+                    </p>
+                  )}
+                  {status === "auto_sent" && analysis?.reason && (
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      Motivo: {analysis.reason}
                     </p>
                   )}
                   {analysis?.confidence != null && status !== "idle" && (
@@ -237,6 +242,7 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
               </Button>
               {analysis?.suggestedResponse &&
                 !analysis.autoSentAt &&
+                analysis.status !== "auto_sent" &&
                 (analysis.status === "needs_review" ||
                   analysis.status === "insufficient_info") && (
                   <Button

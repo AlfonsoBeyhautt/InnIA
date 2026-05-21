@@ -34,12 +34,16 @@ export async function PATCH(req: NextRequest) {
   return withAuthApiHandler(async () => {
     const body = await req.json();
     const provider = body.provider as IntegrationProvider;
-    const config = body.config as Record<string, unknown> | undefined;
+    let config = body.config as Record<string, unknown> | undefined;
 
     let status = body.status as string | undefined;
     let sync_status = body.sync_status as string | undefined;
 
     if (config) {
+      const rows = await getIntegrations();
+      const existing = rows.find((i) => i.provider === provider);
+      const prev = (existing?.config as Record<string, unknown>) ?? {};
+      config = { ...prev, ...config };
       if (provider === "whatsapp_business") {
         const method =
           config.connection_method === "meta" ? "meta" : "manual";

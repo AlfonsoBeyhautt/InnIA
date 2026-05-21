@@ -90,6 +90,10 @@ export function WhatsAppIntegrationPanel({ row, onRefetch }: WhatsAppIntegration
   const [connecting, setConnecting] = useState(false);
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingAutoReply, setSavingAutoReply] = useState(false);
+  const aiAutoReplyEnabled =
+    (row?.config as Record<string, unknown> | undefined)?.ai_auto_reply_enabled !==
+    false;
   const [form, setForm] = useState({
     phone_number_id: "",
     business_account_id: "",
@@ -210,6 +214,32 @@ export function WhatsAppIntegrationPanel({ row, onRefetch }: WhatsAppIntegration
     }
   }, [onRefetch, toast]);
 
+  const toggleAiAutoReply = async (enabled: boolean) => {
+    setSavingAutoReply(true);
+    try {
+      const res = await fetch("/api/integrations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: "whatsapp_business",
+          config: { ai_auto_reply_enabled: enabled },
+        }),
+      });
+      if (!res.ok) throw new Error("Error al guardar");
+      await onRefetch();
+      toast(
+        enabled
+          ? "Respuestas automáticas por IA activadas."
+          : "Respuestas automáticas por IA desactivadas.",
+        "success"
+      );
+    } catch {
+      toast("No se pudo actualizar la preferencia.", "error");
+    } finally {
+      setSavingAutoReply(false);
+    }
+  };
+
   const testConnection = async () => {
     setTesting(true);
     try {
@@ -303,6 +333,27 @@ export function WhatsAppIntegrationPanel({ row, onRefetch }: WhatsAppIntegration
             Serás redirigido a Meta para seleccionar tu cuenta de WhatsApp Business y autorizar
             la conexión.
           </p>
+
+          {connection.state === "connected" && (
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/70 bg-sand/40 p-3">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-border"
+                checked={aiAutoReplyEnabled}
+                disabled={savingAutoReply}
+                onChange={(e) => void toggleAiAutoReply(e.target.checked)}
+              />
+              <span className="text-sm leading-snug">
+                <span className="font-medium text-foreground">
+                  Respuestas automáticas por IA (WhatsApp)
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Si la IA tiene confianza alta en consultas simples, envía la respuesta por
+                  WhatsApp sin esperar tu aprobación.
+                </span>
+              </span>
+            </label>
+          )}
 
           <div className="flex flex-wrap gap-2">
             {connection.state !== "not_connected" && (

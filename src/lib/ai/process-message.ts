@@ -8,10 +8,18 @@ import {
   AI_TEMPERATURE,
 } from "@/lib/ai/config";
 import {
+  detectComplaintSignals,
+  detectCommercialProposal,
   detectEscalationSignals,
   parseAndApplyAiRules,
   type ParsedAiResponse,
 } from "@/lib/ai/parse-response";
+import {
+  deliverWhatsAppMessage,
+  isWhatsAppChannel,
+} from "@/lib/integrations/whatsapp/send-outbound";
+import { WhatsAppSendError } from "@/lib/integrations/whatsapp-cloud";
+import { getIntegrations } from "@/lib/db/queries";
 import {
   getConversationById,
   getGuestById,
@@ -38,6 +46,8 @@ export type ProcessMessageResult = {
   missingInformation: string[];
   reason: string;
   autoSent: boolean;
+  autoSendFailed?: boolean;
+  autoSendError?: string;
   messageId?: string;
   logId: string;
 };
@@ -110,6 +120,8 @@ export async function processMessageWithAi(input: {
   }
 
   const escalationHint = detectEscalationSignals(message.body);
+  const complaintHint = detectComplaintSignals(message.body);
+  const commercialHint = detectCommercialProposal(message.body);
   const userPrompt = buildAiUserPrompt({
     guestMessage: message.body,
     guest: guest ? { fullName: guest.fullName } : null,
@@ -137,7 +149,7 @@ export async function processMessageWithAi(input: {
     });
 
     const raw = completion.choices[0]?.message?.content ?? "{}";
-    parsed = parseAndApplyAiRules(raw, { escalationHint });
+    parsed = parseAndApplyAiRules(raw, { escalationHint, complaintHint });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error al llamar a OpenAI";
     await createAiResponseLog({
@@ -171,42 +183,52 @@ export async function processMessageWithAi(input: {
     };
   }
 
+  if (commercialHint && parsed.decision === "auto_responder") {
+    parsed = {
+      ...parsed,
+      decision: "requiere_revision",
+      reason: `${parsed.reason} Propuesta comercial o caso que requiere revisión del dueño.`,
+    };
+  }
+
+  const integrations = await getIntegrations();
+  const waRow = integrations.find((i) => i.provider === "whatsapp_business");
+  const waConfig = (waRow?.config as Record<string, unknown>) ?? {};
+  const aiAutoReplyEnabled = waConfig.ai_auto_reply_enabled !== false;
+
   const decision = parsed.decision;
-  const autoSend =
+  const wantsAutoSend =
     decision === "auto_responder" && Boolean(parsed.generatedResponse.trim());
+  const canDeliverWhatsApp =
+    wantsAutoSend && aiAutoReplyEnabled && isWhatsAppChannel(conversation);
 
-  const log = await createAiResponseLog({
-    conversationId: input.conversationId,
-    messageId: input.messageId,
-    generatedResponse: parsed.generatedResponse,
-    usedKnowledge: parsed.usedKnowledge,
-    missingInformation: parsed.missingInformation,
-    aiDecision: decision,
-    autoSent: autoSend,
-  });
-
-  const labels: string[] =
-    decision === "auto_responder"
-      ? ["Respondido por IA"]
-      : decision === "escalar_dueno"
-        ? ["Urgente", "Requiere revisión"]
-        : ["Requiere revisión"];
-
-  await updateConversation(input.conversationId, {
-    ai_status: aiStatusMap[decision],
-    priority:
-      decision === "escalar_dueno"
-        ? "urgente"
-        : decision === "requiere_revision" || decision === "informacion_insuficiente"
-          ? "revisar"
-          : "normal",
-    labels,
-    unread: !autoSend,
-  });
-
+  let autoSent = false;
+  let autoSendFailed = false;
+  let autoSendError: string | undefined;
   let sentMessageId: string | undefined;
 
-  if (autoSend) {
+  if (canDeliverWhatsApp) {
+    try {
+      const delivered = await deliverWhatsAppMessage({
+        conversationId: input.conversationId,
+        text: parsed.generatedResponse,
+        senderType: "ai",
+        senderName: "InnIA",
+        aiGenerated: true,
+        aiAutoSent: true,
+      });
+      autoSent = true;
+      sentMessageId = delivered.message.id;
+    } catch (e) {
+      autoSendFailed = true;
+      autoSendError =
+        e instanceof WhatsAppSendError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "No se pudo enviar por WhatsApp";
+    }
+  } else if (wantsAutoSend && aiAutoReplyEnabled && !isWhatsAppChannel(conversation)) {
     const sent = await sendMessage({
       conversationId: input.conversationId,
       senderType: "ai",
@@ -215,12 +237,62 @@ export async function processMessageWithAi(input: {
       aiGenerated: true,
       aiAutoSent: true,
     });
+    autoSent = true;
     sentMessageId = sent.id;
+  }
 
+  const log = await createAiResponseLog({
+    conversationId: input.conversationId,
+    messageId: input.messageId,
+    generatedResponse: parsed.generatedResponse,
+    usedKnowledge: parsed.usedKnowledge,
+    missingInformation: parsed.missingInformation,
+    aiDecision: decision,
+    autoSent,
+  });
+
+  const labels: string[] = autoSent
+    ? ["Respondido por IA"]
+    : decision === "escalar_dueno"
+      ? ["Urgente", "Requiere revisión"]
+      : wantsAutoSend && (autoSendFailed || !aiAutoReplyEnabled)
+        ? ["Requiere revisión"]
+        : decision === "auto_responder"
+          ? ["Respondido por IA"]
+          : ["Requiere revisión"];
+
+  const effectiveAiStatus = autoSent
+    ? "auto_sent"
+    : autoSendFailed || (wantsAutoSend && !aiAutoReplyEnabled)
+      ? "needs_review"
+      : aiStatusMap[decision];
+
+  await updateConversation(input.conversationId, {
+    ai_status: effectiveAiStatus,
+    priority:
+      decision === "escalar_dueno"
+        ? "urgente"
+        : effectiveAiStatus === "needs_review" ||
+            effectiveAiStatus === "insufficient_info"
+          ? "revisar"
+          : "normal",
+    labels,
+    unread: !autoSent,
+  });
+
+  if (autoSent) {
     await createNotification({
       type: "ia",
       title: "IA respondió automáticamente",
       body: `Respuesta enviada a ${conversation.guestName} en ${property?.name ?? "propiedad"}.`,
+      relatedEntityType: "conversation",
+      relatedEntityId: input.conversationId,
+    });
+  } else if (autoSendFailed) {
+    await createNotification({
+      type: "ia",
+      title: "Error al enviar respuesta automática",
+      body: autoSendError ?? "No se pudo enviar por WhatsApp.",
       relatedEntityType: "conversation",
       relatedEntityId: input.conversationId,
     });
@@ -259,7 +331,9 @@ export async function processMessageWithAi(input: {
     usedKnowledge: parsed.usedKnowledge,
     missingInformation: parsed.missingInformation,
     reason: parsed.reason,
-    autoSent: autoSend,
+    autoSent,
+    autoSendFailed: autoSendFailed || undefined,
+    autoSendError,
     messageId: sentMessageId,
     logId: log.id,
   };

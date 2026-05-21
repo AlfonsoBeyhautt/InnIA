@@ -12,6 +12,7 @@ export interface AiAnalysis {
   detectedIntent: string;
   confidence?: number;
   autoSentAt?: string;
+  autoReplyBadge?: string;
   propertySlug?: string;
 }
 

@@ -10,6 +10,10 @@ export type WhatsAppIntegrationConfig = {
   display_phone_number?: string;
   connected_phone?: string;
   connection_method?: "meta" | "manual";
+  /** When false, IA will not auto-send WhatsApp replies (default: true) */
+  ai_auto_reply_enabled?: boolean;
+  outbound_debug_log?: unknown[];
+  webhook_debug_log?: unknown[];
 };
 
 export type EmailIntegrationConfig = {

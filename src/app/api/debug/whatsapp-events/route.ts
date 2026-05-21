@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth/session";
 import { WHATSAPP_WEBHOOK_PUBLIC_URL } from "@/lib/integrations/whatsapp/constants";
 import type { WebhookDebugEntry } from "@/lib/integrations/whatsapp/webhook-debug";
+import type { OutboundDebugEntry } from "@/lib/integrations/whatsapp/outbound-debug";
 
 export async function GET() {
   return withAuthApiHandler(async () => {
@@ -18,8 +19,11 @@ export async function GET() {
       .maybeSingle();
 
     const cfg = (row?.config as Record<string, unknown>) ?? {};
-    const events = Array.isArray(cfg.webhook_debug_log)
+    const inboundEvents = Array.isArray(cfg.webhook_debug_log)
       ? (cfg.webhook_debug_log as WebhookDebugEntry[])
+      : [];
+    const outboundEvents = Array.isArray(cfg.outbound_debug_log)
+      ? (cfg.outbound_debug_log as OutboundDebugEntry[])
       : [];
 
     return jsonOk({
@@ -33,13 +37,15 @@ export async function GET() {
             phone_number_id: cfg.phone_number_id ?? null,
             display_phone_number: cfg.display_phone_number ?? cfg.connected_phone ?? null,
             credentials_configured: Boolean(cfg.credentials_configured),
+            ai_auto_reply_enabled: cfg.ai_auto_reply_enabled !== false,
             last_sync_at: row.last_sync_at,
             updated_at: row.updated_at,
           }
         : null,
-      recentEvents: events,
+      recentInboundEvents: inboundEvents,
+      recentOutboundAttempts: outboundEvents,
       hint:
-        "Si recentEvents está vacío tras enviar un mensaje, revisá que phone_number_id en la integración coincida con metadata.phone_number_id del webhook (Vercel Logs: [whatsapp:webhook]).",
+        "Si recentOutboundAttempts muestra error, revisá token, phone_number_id y formato del teléfono del huésped (598XXXXXXXX). Logs del servidor: [whatsapp:outbound].",
     });
   });
 }
