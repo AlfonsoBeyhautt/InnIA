@@ -8,21 +8,23 @@ type HomeMetricCardsProps = {
   reservations: Reservation[];
   conversations: Conversation[];
   tasks: OperationTask[];
+  unitCount?: number;
 };
 
 export function HomeMetricCards({
   reservations,
   conversations,
   tasks,
+  unitCount = 0,
 }: HomeMetricCardsProps) {
   const today = new Date().toISOString().slice(0, 10);
   const reservationsToday = reservations.filter(
     (r) => r.checkIn === today || r.checkOut === today
   ).length;
   const occupied = reservations.filter((r) => r.status === "check-in").length;
-  const totalUnits = 6;
-  const occupancy = totalUnits > 0 ? Math.round((occupied / totalUnits) * 100) : 0;
-  const displayOccupancy = occupancy || 72;
+  const totalUnits = unitCount;
+  const displayOccupancy =
+    totalUnits > 0 ? Math.round((occupied / totalUnits) * 100) : 0;
   const importantMessages = conversations.filter(
     (c) => c.unread || c.urgency !== "normal"
   ).length;
@@ -34,8 +36,8 @@ export function HomeMetricCards({
     {
       label: "Ocupación actual",
       value: `${displayOccupancy}%`,
-      delta: "+5% vs. semana",
-      deltaTone: "text-success",
+      delta: totalUnits > 0 ? `${occupied} de ${totalUnits} unidades` : "sin unidades",
+      deltaTone: "text-muted-foreground",
       icon: Percent,
       visual: "occupancy" as const,
       percent: displayOccupancy,

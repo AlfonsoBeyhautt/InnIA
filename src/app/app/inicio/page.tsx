@@ -14,6 +14,7 @@ import { HomeOpsSnapshot } from "@/components/inicio/home-ops-snapshot";
 import { PageSection } from "@/components/motion/page-section";
 import { useApi } from "@/lib/hooks/use-api";
 import { useSession } from "@/lib/hooks/use-session";
+import type { AppStats } from "@/lib/db/app-stats";
 import type { Conversation, OperationTask, Reservation } from "@/types";
 
 
@@ -30,6 +31,7 @@ export default function InicioPage() {
   const { data: apiConversations, refetch: refetchConversations } = useApi<Conversation[]>(
     user ? "/api/conversations" : null
   );
+  const { data: appStats } = useApi<AppStats>(user ? "/api/stats" : null);
 
   const refetchAll = useCallback(() => {
     void refetchReservations();
@@ -66,6 +68,8 @@ export default function InicioPage() {
     [operationTasks, selectedProperty]
   );
 
+  const unitCount = appStats?.unitCount ?? 0;
+
   return (
     <div className="ci-page ci-page-wide min-h-full space-y-4 pb-8">
       <PageSection>
@@ -77,6 +81,7 @@ export default function InicioPage() {
           reservations={filteredReservations}
           conversations={filteredConversations}
           tasks={filteredTasks}
+          unitCount={unitCount}
         />
       </PageSection>
 

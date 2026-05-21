@@ -15,7 +15,9 @@ import { cn } from "@/lib/utils";
 import { useInbox } from "@/context/inbox-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { reservations } from "@/data/mock";
+import { preferApi } from "@/lib/prefer-api";
+import { useApi } from "@/lib/hooks/use-api";
+import type { Reservation } from "@/types";
 import { propertyName, formatCurrency } from "@/lib/utils";
 
 const statusConfig = {
@@ -58,6 +60,8 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
     aiProcessingId,
     sendAiReply,
   } = useInbox();
+  const { data: apiReservations } = useApi<Reservation[]>("/api/reservations", []);
+  const reservations = preferApi(apiReservations);
 
   const isSheet = variant === "sheet";
 
@@ -66,7 +70,7 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
   const status = analysis?.status ?? "idle";
   const config = statusConfig[status];
   const StatusIcon = config.icon;
-  const reservation = selected
+  const reservation = selected?.reservationId
     ? reservations.find((r) => r.id === selected.reservationId)
     : null;
 

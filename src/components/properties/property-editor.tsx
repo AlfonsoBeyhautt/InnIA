@@ -103,9 +103,16 @@ type PropertyEditorProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved?: (p: Property) => void;
+  onDeleted?: (propertyId: string) => void;
 };
 
-export function PropertyEditor({ property, open, onOpenChange, onSaved }: PropertyEditorProps) {
+export function PropertyEditor({
+  property,
+  open,
+  onOpenChange,
+  onSaved,
+  onDeleted,
+}: PropertyEditorProps) {
   const { toast } = useToast();
   const propertyKey = property.dbId ?? property.id;
   const apiBase = `/api/properties/${propertyKey}`;
@@ -125,6 +132,8 @@ export function PropertyEditor({ property, open, onOpenChange, onSaved }: Proper
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [unitBusy, setUnitBusy] = useState(false);
   const [deleteUnitTarget, setDeleteUnitTarget] = useState<Unit | null>(null);
+  const [deletePropertyOpen, setDeletePropertyOpen] = useState(false);
+  const [deletingProperty, setDeletingProperty] = useState(false);
 
   const loadFull = useCallback(async () => {
     setLoading(true);
@@ -278,6 +287,22 @@ export function PropertyEditor({ property, open, onOpenChange, onSaved }: Proper
     }
   };
 
+  const confirmDeleteProperty = async () => {
+    setDeletingProperty(true);
+    try {
+      await apiDelete(apiBase);
+      toast("Propiedad eliminada.", "success");
+      setDeletePropertyOpen(false);
+      onOpenChange(false);
+      onDeleted?.(property.id);
+      window.dispatchEvent(new CustomEvent("innia:property-updated"));
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "No se pudo eliminar la propiedad.", "error");
+    } finally {
+      setDeletingProperty(false);
+    }
+  };
+
   const confirmDeleteUnit = async () => {
     if (!deleteUnitTarget) return;
     setUnitBusy(true);
@@ -406,6 +431,23 @@ export function PropertyEditor({ property, open, onOpenChange, onSaved }: Proper
                     />
                     <span className="font-medium">Cerradura inteligente en línea</span>
                   </label>
+                  <div className="mt-6 rounded-xl border border-danger/30 bg-danger/5 p-4">
+                    <p className="text-sm font-medium text-danger">Zona de peligro</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Se eliminarán reservas, mensajes, tareas, unidades y todos los datos
+                      asociados a esta propiedad. Esta acción no se puede deshacer.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 border-danger/40 text-danger hover:bg-danger/10"
+                      onClick={() => setDeletePropertyOpen(true)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar propiedad
+                    </Button>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="units" className="space-y-4">
@@ -629,6 +671,32 @@ export function PropertyEditor({ property, open, onOpenChange, onSaved }: Proper
             </Button>
             <Button onClick={() => void saveUnitEdit()} disabled={unitBusy}>
               {unitBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deletePropertyOpen} onOpenChange={setDeletePropertyOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Eliminar propiedad?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Vas a eliminar <strong>{property.name}</strong> y todos sus datos: reservas, mensajes,
+            conversaciones, tareas operativas, unidades y configuración de IA. Esta acción es
+            permanente.
+          </p>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setDeletePropertyOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              className="border-danger/40 text-danger hover:bg-danger/10"
+              onClick={() => void confirmDeleteProperty()}
+              disabled={deletingProperty}
+            >
+              {deletingProperty ? <Loader2 className="h-4 w-4 animate-spin" /> : "Eliminar"}
             </Button>
           </div>
         </DialogContent>

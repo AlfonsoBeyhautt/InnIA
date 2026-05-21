@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { cn, propertyName } from "@/lib/utils";
 import type { PropertyId } from "@/types";
 import type { Reservation } from "@/types";
-import { propertyUnits, type PropertyUnit } from "@/data/mock/units";
+import { unitsFromReservations, type PropertyUnit } from "@/lib/property-units";
 import {
   DAY_WIDTH,
   ROW_HEIGHT,
@@ -67,12 +67,12 @@ export function PmsTimelineCalendar({
   const timelineWidth = dayCount * DAY_WIDTH;
 
   const units = useMemo(() => {
-    let list = propertyUnits;
+    let list = unitsFromReservations(reservations);
     if (propertyFilter !== "all") {
       list = list.filter((u) => u.propertyId === propertyFilter);
     }
     return list;
-  }, [propertyFilter]);
+  }, [propertyFilter, reservations]);
 
   const groups = groupUnits(units);
 

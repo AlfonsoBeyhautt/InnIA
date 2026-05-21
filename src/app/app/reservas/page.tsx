@@ -48,7 +48,7 @@ export default function ReservasPage() {
   const { selectedProperty } = useProperty();
   const [view, setView] = useState<CalendarViewRange>("quincena");
   const [rangeStart, setRangeStart] = useState(getDefaultRangeStart);
-  const [selectedReservationId, setSelectedReservationId] = useState<string | null>("r1");
+  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(true);
 
   const { data, refetch } = useApi<Reservation[]>(
@@ -177,18 +177,24 @@ export default function ReservasPage() {
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1 overflow-hidden p-3 sm:p-4">
-          <PmsTimelineCalendar
-            reservations={filtered}
-            propertyFilter={selectedProperty}
-            range={view}
-            rangeStart={rangeStart}
-            selectedReservationId={selectedReservationId}
-            onSelectReservation={(id) => {
-              setSelectedReservationId(id);
-              setDetailOpen(true);
-            }}
-          />
+        <div className="relative min-w-0 flex-1 overflow-hidden p-3 sm:p-4">
+          {filtered.length === 0 ? (
+            <p className="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/30 px-6 text-center text-sm text-muted-foreground">
+              No hay reservas todavía.
+            </p>
+          ) : (
+            <PmsTimelineCalendar
+              reservations={filtered}
+              propertyFilter={selectedProperty}
+              range={view}
+              rangeStart={rangeStart}
+              selectedReservationId={selectedReservationId}
+              onSelectReservation={(id) => {
+                setSelectedReservationId(id);
+                setDetailOpen(true);
+              }}
+            />
+          )}
         </div>
         {detailOpen && (
           <div className="w-full max-w-[340px] shrink-0 border-l border-border/70 bg-card p-3 sm:w-[340px]">

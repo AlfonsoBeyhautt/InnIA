@@ -32,7 +32,7 @@ export function HomeMessagesCard({ conversations }: { conversations: Conversatio
       <ul className="space-y-2">
         {items.length === 0 ? (
           <li className="rounded-xl bg-sand/50 px-4 py-6 text-center text-sm text-muted-foreground">
-            Bandeja al día.
+            No hay mensajes todavía. Conectá WhatsApp Business, Email o sincronizá tus canales para empezar.
           </li>
         ) : (
           items.map((c) => (

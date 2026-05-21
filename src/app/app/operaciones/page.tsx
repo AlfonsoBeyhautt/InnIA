@@ -6,7 +6,7 @@ import { useProperty } from "@/context/property-context";
 import { filterByProperty } from "@/lib/utils";
 import { preferApi } from "@/lib/prefer-api";
 import { useApi, apiPatch } from "@/lib/hooks/use-api";
-import type { OperationTask, TaskStatus } from "@/types";
+import type { OperationTask, Property, TaskStatus } from "@/types";
 import { OperationsKanban } from "@/components/operations/operations-kanban";
 import { OperationsActivityFeed } from "@/components/operations/operations-activity-feed";
 import { TaskDetailDialog } from "@/components/operations/task-detail-dialog";
@@ -22,7 +22,9 @@ export default function OperacionesPage() {
     `/api/tasks${selectedProperty !== "all" ? `?property=${selectedProperty}` : ""}`,
     []
   );
+  const { data: apiProperties } = useApi<Property[]>("/api/properties", []);
   const operationTasks = preferApi(data);
+  const properties = preferApi(apiProperties);
   const [detailTask, setDetailTask] = useState<OperationTask | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -121,7 +123,8 @@ export default function OperacionesPage() {
       <CreateTaskDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        defaultPropertyId={selectedProperty !== "all" ? selectedProperty : "pdd"}
+        properties={properties}
+        defaultPropertyId={selectedProperty !== "all" ? selectedProperty : undefined}
         onCreated={() => void refetch()}
       />
     </div>

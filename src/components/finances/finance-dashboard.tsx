@@ -1,6 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { preferApi } from "@/lib/prefer-api";
+import { useApi } from "@/lib/hooks/use-api";
+import { useSession } from "@/lib/hooks/use-session";
+import type { Property } from "@/types";
 import {
   Area,
   AreaChart,
@@ -16,14 +20,6 @@ import {
 import { motion } from "framer-motion";
 import { Download, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency, propertyName } from "@/lib/utils";
-const financeSummary = {
-  ingresos: 0,
-  gastos: 0,
-  gananciaNeta: 0,
-  gastosLimpieza: 0,
-  gastosMantenimiento: 0,
-};
-const monthlyRevenue: { mes: string; monto: number }[] = [];
 const transactions: import("@/types").FinancialTransaction[] = [];
 const financeAiInsights: {
   id: string;
@@ -71,6 +67,9 @@ const tooltipStyle = {
 
 export function FinanceDashboard() {
   const { toast } = useToast();
+  const { user } = useSession();
+  const { data: apiProperties } = useApi<Property[]>(user ? "/api/properties" : null, []);
+  const properties = preferApi(apiProperties);
   const [propertyFilter, setPropertyFilter] = useState<PropertyId | "all">("all");
   const [monthFilter, setMonthFilter] = useState("mayo");
   const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
@@ -117,37 +116,36 @@ export function FinanceDashboard() {
       .filter((t) => t.type === "gasto")
       .reduce((s, t) => s + Math.abs(t.amount), 0);
     const ganancia = ingresos - gastos;
-    const margin =
-      ingresos > 0 ? Math.round((ganancia / ingresos) * 100) : financeSummary.gananciaNeta;
-    const useFallback = !activeFilters && filteredTx.length === 0;
+    const margin = ingresos > 0 ? Math.round((ganancia / ingresos) * 100) : 0;
+    const hasData = filteredTx.length > 0;
     return [
       {
         label: "Ingresos",
-        value: useFallback ? financeSummary.ingresos : ingresos,
-        trend: "+12%",
+        value: ingresos,
+        trend: hasData ? "período filtrado" : "—",
         up: true,
       },
       {
         label: "Gastos",
-        value: useFallback ? financeSummary.gastos : gastos,
-        trend: "-4%",
+        value: gastos,
+        trend: hasData ? "período filtrado" : "—",
         up: false,
       },
       {
         label: "Ganancia neta",
-        value: useFallback ? financeSummary.gananciaNeta : ganancia,
-        trend: "+18%",
-        up: true,
+        value: ganancia,
+        trend: hasData ? "período filtrado" : "—",
+        up: ganancia >= 0,
       },
       {
         label: "Margen promedio",
-        value: useFallback ? "74%" : `${margin}%`,
-        trend: "+3 pts",
-        up: true,
+        value: `${margin}%`,
+        trend: hasData ? "período filtrado" : "—",
+        up: margin >= 0,
         isPercent: true,
       },
     ];
-  }, [filteredTx, activeFilters]);
+  }, [filteredTx]);
 
   const pieData = useMemo(() => {
     const total = filteredProfitability.reduce((s, p) => s + p.revenue, 0);
@@ -176,17 +174,12 @@ export function FinanceDashboard() {
         { mes: "May", monto: mayo },
       ];
     }
-    if (monthFilter === "abril") {
-      return monthlyRevenue.filter((m) => m.mes === "Abr");
-    }
-    if (monthFilter === "mayo") {
-      return monthlyRevenue.filter((m) => m.mes === "May");
-    }
-    return monthlyRevenue;
+    return [];
   }, [filteredTx, monthFilter]);
 
   const monthLabel =
     monthFilter === "mayo" ? "Mayo" : monthFilter === "abril" ? "Abril" : "Todos los meses";
+  const hasFinanceData = transactions.length > 0;
 
   return (
     <div className="ci-page ci-page-wide space-y-5">
@@ -197,14 +190,12 @@ export function FinanceDashboard() {
             {propertyFilter !== "all" && ` · ${propertyName(propertyFilter)}`}
           </p>
           <h1 className="mt-1.5 text-2xl font-semibold tracking-tight">
-            {monthLabel === "Mayo"
-              ? "Mayo viene 18% mejor que abril"
-              : monthLabel === "Abril"
-                ? "Resumen financiero de abril"
-                : "Panorama financiero · abril y mayo"}
+            {hasFinanceData ? `Resumen financiero · ${monthLabel}` : "Finanzas"}
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
-            Mayor margen en reservas directas y menor gasto en mantenimiento.
+            {hasFinanceData
+              ? "Métricas calculadas desde tus reservas y transacciones registradas."
+              : "No hay datos financieros para mostrar."}
           </p>
         </header>
       </PageSection>
@@ -223,9 +214,11 @@ export function FinanceDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las propiedades</SelectItem>
-              <SelectItem value="pdd">Casa Punta del Diablo</SelectItem>
-              <SelectItem value="rocha">Cabaña Rocha</SelectItem>
-              <SelectItem value="paloma">Apartamento La Paloma</SelectItem>
+              {properties.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={monthFilter} onValueChange={setMonthFilter}>
@@ -297,6 +290,11 @@ export function FinanceDashboard() {
           <div className="ci-surface p-4 lg:col-span-7">
             <h2 className="ci-section-title text-base">Tendencia de ingresos</h2>
             <div className="mt-3 h-52">
+              {chartMonths.length === 0 ? (
+                <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  No hay datos financieros para mostrar.
+                </p>
+              ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartMonths}>
                   <defs>
@@ -329,11 +327,17 @@ export function FinanceDashboard() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              )}
             </div>
           </div>
 
           <div className="ci-surface p-4 lg:col-span-5">
             <h2 className="ci-section-title text-base">Ingresos por propiedad</h2>
+            {pieData.length === 0 ? (
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                No hay datos financieros para mostrar.
+              </p>
+            ) : (
             <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="h-40 w-full shrink-0 sm:h-44 sm:w-[44%]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -390,6 +394,7 @@ export function FinanceDashboard() {
                 ))}
               </ul>
             </div>
+            )}
           </div>
         </div>
       </PageSection>
@@ -397,6 +402,11 @@ export function FinanceDashboard() {
       <PageSection delay={0.1}>
         <div className="ci-surface p-4">
           <h2 className="ci-section-title text-base">Rentabilidad por propiedad</h2>
+          {filteredProfitability.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              No hay datos financieros para mostrar.
+            </p>
+          ) : (
           <motion.div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {filteredProfitability.map((p) => {
               const net = p.revenue - p.expenses;
@@ -408,7 +418,7 @@ export function FinanceDashboard() {
                 >
                   <p className="text-sm font-medium leading-snug">{p.name}</p>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Ocupación {p.occupancy}% · Margen {p.margin}%
+                    Margen {p.margin}%
                   </p>
                   <motion.div className="mt-2.5 grid grid-cols-3 gap-1 text-[11px]">
                     <div>
@@ -421,18 +431,14 @@ export function FinanceDashboard() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Neto</span>
-                      <p className="font-semibold text-primary">
-                        {formatCurrency(net)}
-                        <span className="block text-[10px] font-normal text-muted-foreground">
-                          {p.trend}
-                        </span>
-                      </p>
+                      <p className="font-semibold text-primary">{formatCurrency(net)}</p>
                     </div>
                   </motion.div>
                 </motion.div>
               );
             })}
           </motion.div>
+          )}
         </div>
       </PageSection>
 

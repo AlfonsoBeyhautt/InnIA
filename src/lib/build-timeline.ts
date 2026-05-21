@@ -111,34 +111,6 @@ export function buildTimelineEvents(
       });
     });
 
-  ahora.push({
-    id: "lock-gen",
-    time: "16:00",
-    sortKey: 28,
-    kind: "cerradura",
-    title: "Código de cerradura generado",
-    description: "Martín y familia · Casa Punta del Diablo",
-    propertyLabel: shortProperty("pdd"),
-    propertyId: "pdd",
-    href: "/app/cerraduras",
-    priority: "info",
-    priorityLabel: "Automático",
-  });
-
-  ahora.push({
-    id: "ia-parking",
-    time: "10:33",
-    sortKey: 35,
-    kind: "ia",
-    title: "IA respondió consulta sobre estacionamiento",
-    description: "Martín y familia · Airbnb",
-    propertyLabel: shortProperty("pdd"),
-    propertyId: "pdd",
-    href: "/app/inbox",
-    priority: "info",
-    priorityLabel: "IA activa",
-  });
-
   reservations
     .filter((r) => r.status === "confirmada")
     .slice(0, 2)
@@ -178,7 +150,7 @@ export function buildTimelineEvents(
     });
 
   reservations
-    .filter((r) => r.status === "pendiente" || r.checkOut.includes("20"))
+    .filter((r) => r.status === "pendiente" || r.status === "check-out")
     .slice(0, 2)
     .forEach((r) => {
       manana.push({
@@ -198,20 +170,6 @@ export function buildTimelineEvents(
         priorityLabel: "Mañana",
       });
     });
-
-  manana.push({
-    id: "ia-summary",
-    time: "Mañana",
-    sortKey: 80,
-    kind: "ia",
-    title: "Resumen automático de actividad",
-    description: "La IA preparará un resumen de mensajes y tareas",
-    propertyLabel: "Todas las propiedades",
-    propertyId: "all",
-    href: "/app/reportes",
-    priority: "info",
-    priorityLabel: "Programado",
-  });
 
   const sort = (a: TimelineEvent, b: TimelineEvent) => a.sortKey - b.sortKey;
   ahora.sort(sort);

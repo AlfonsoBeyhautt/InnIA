@@ -21,7 +21,7 @@ export function InboxEmptyState() {
   if (whatsapp || email) {
     return (
       <p className="p-6 text-center text-sm text-muted-foreground">
-        No hay conversaciones todavía. Los mensajes de WhatsApp o Email aparecerán aquí.
+        No hay mensajes todavía. Conectá WhatsApp Business, Email o sincronizá tus canales para empezar.
       </p>
     );
   }

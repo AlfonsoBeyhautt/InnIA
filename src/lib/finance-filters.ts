@@ -1,8 +1,6 @@
 import type { FinancialTransaction, Platform, PropertyId } from "@/types";
 import { propertyName } from "@/lib/utils";
 import { downloadCsv } from "@/lib/export-csv";
-import { propertyProfitability } from "@/data/mock/operations";
-
 export type FinanceFilters = {
   property: PropertyId | "all";
   month: string;
@@ -36,26 +34,41 @@ export function computeProfitability(
   filteredTx: FinancialTransaction[],
   propertyFilter: PropertyId | "all",
   platformFilter: Platform | "all",
-  forceFromTx: boolean
+  _forceFromTx: boolean
 ) {
-  let list =
-    propertyFilter === "all"
-      ? propertyProfitability
-      : propertyProfitability.filter((p) => p.id === propertyFilter);
+  if (filteredTx.length === 0) return [];
 
-  if (!forceFromTx && filteredTx.length === 0) return list;
+  const byProperty = new Map<
+    string,
+    { id: PropertyId; name: string; revenue: number; expenses: number; margin: number }
+  >();
 
-  list = list.map((p) => {
-    const txs = filteredTx.filter((t) => t.propertyId === p.id);
-    const ingresos = txs
-      .filter((t) => t.type === "ingreso")
-      .reduce((s, t) => s + t.amount, 0);
-    const gastos = txs
-      .filter((t) => t.type === "gasto")
-      .reduce((s, t) => s + Math.abs(t.amount), 0);
-    const margin = ingresos > 0 ? Math.round(((ingresos - gastos) / ingresos) * 100) : 0;
-    return { ...p, revenue: ingresos, expenses: gastos, margin };
-  });
+  for (const t of filteredTx) {
+    if (propertyFilter !== "all" && t.propertyId !== propertyFilter) continue;
+    if (platformFilter !== "all") {
+      if (t.type === "gasto" && !t.platform) {
+        /* gastos sin plataforma se incluyen */
+      } else if (t.platform !== platformFilter) {
+        continue;
+      }
+    }
+    const pid = t.propertyId;
+    const entry = byProperty.get(pid) ?? {
+      id: pid,
+      name: propertyName(pid),
+      revenue: 0,
+      expenses: 0,
+      margin: 0,
+    };
+    if (t.type === "ingreso") entry.revenue += t.amount;
+    else entry.expenses += Math.abs(t.amount);
+    byProperty.set(pid, entry);
+  }
+
+  let list = [...byProperty.values()].map((p) => ({
+    ...p,
+    margin: p.revenue > 0 ? Math.round(((p.revenue - p.expenses) / p.revenue) * 100) : 0,
+  }));
 
   if (platformFilter !== "all") {
     list = list.filter((p) =>

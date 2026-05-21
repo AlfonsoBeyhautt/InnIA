@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useApi } from "@/lib/hooks/use-api";
+import { useSession } from "@/lib/hooks/use-session";
+import type { AppStats } from "@/lib/db/app-stats";
 import {
   BedDouble,
   Bot,
@@ -55,6 +58,8 @@ function Toggle({ on }: { on: boolean; label: string }) {
 }
 
 export function SettingsDashboard() {
+  const { user } = useSession();
+  const { data: stats } = useApi<AppStats>(user ? "/api/stats" : null);
   const [active, setActive] = useState<SectionId>("integraciones");
   const [autoReply, setAutoReply] = useState(true);
   const [nightMode, setNightMode] = useState(false);
@@ -144,7 +149,9 @@ export function SettingsDashboard() {
         {active === "propiedades" && (
           <div className="max-w-xl space-y-4">
             <h2 className="text-lg font-semibold">Propiedades</h2>
-            <p className="text-sm text-muted-foreground">3 propiedades · 6 unidades configuradas</p>
+            <p className="text-sm text-muted-foreground">
+              {stats?.propertyCount ?? 0} propiedades · {stats?.unitCount ?? 0} unidades configuradas
+            </p>
             <Button>Agregar propiedad</Button>
           </div>
         )}
@@ -152,9 +159,11 @@ export function SettingsDashboard() {
         {active === "cerraduras" && (
           <div className="max-w-xl space-y-4">
             <h2 className="text-lg font-semibold">Cerraduras inteligentes</h2>
-            <p className="flex items-center gap-2 text-sm">
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Wifi className="h-4 w-4 text-success" />
-              2 en línea · 1 offline
+              {(stats?.locksOnline ?? 0) > 0 || (stats?.locksOffline ?? 0) > 0
+                ? `${stats?.locksOnline ?? 0} en línea · ${stats?.locksOffline ?? 0} sin conexión`
+                : "Sin cerraduras configuradas"}
             </p>
             <Button asChild variant="outline" size="sm">
               <a href="/app/cerraduras">Ver dispositivos</a>

@@ -9,7 +9,7 @@ import { useApi } from "@/lib/hooks/use-api";
 import type { Property, Reservation } from "@/types";
 
 export default function PropiedadesPage() {
-  const { selectedProperty } = useProperty();
+  const { selectedProperty, setSelectedProperty } = useProperty();
   const { data: apiProperties, refetch: refetchProperties } = useApi<Property[]>(
     "/api/properties",
     []
@@ -67,7 +67,9 @@ export default function PropiedadesPage() {
 
       {filtered.length === 0 ? (
         <p className="rounded-xl bg-muted/50 p-8 text-center text-sm text-muted-foreground">
-          No hay propiedades para el filtro seleccionado.
+          {list.length === 0
+            ? "No hay propiedades cargadas. Agregá tu primera propiedad para comenzar."
+            : "No hay propiedades para el filtro seleccionado."}
         </p>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -93,6 +95,15 @@ export default function PropiedadesPage() {
           open={!!detail}
           onOpenChange={(open) => !open && setDetail(null)}
           onSaved={handleSaved}
+          onDeleted={(id) => {
+            setList((prev) => prev.filter((p) => p.id !== id && p.dbId !== detail.dbId));
+            setDetail(null);
+            if (selectedProperty === id || selectedProperty === detail.id) {
+              setSelectedProperty("all");
+            }
+            void refetchProperties();
+            void refetchReservations();
+          }}
         />
       )}
     </div>

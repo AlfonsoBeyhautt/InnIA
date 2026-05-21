@@ -683,3 +683,68 @@ export async function createAiResponseLog(input: {
   if (error) throw error;
   return data;
 }
+
+/** Deletes a property and all related operational data (owner-scoped). */
+export async function deleteProperty(propertyDbId: string) {
+  await assertPropertyOwner(propertyDbId);
+  const { supabase } = await authDb();
+
+  const { data: convs, error: convErr } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("property_id", propertyDbId);
+  if (convErr) throw convErr;
+  const convIds = (convs ?? []).map((c) => c.id);
+
+  const { data: reservations, error: resErr } = await supabase
+    .from("reservations")
+    .select("id")
+    .eq("property_id", propertyDbId);
+  if (resErr) throw resErr;
+  const resIds = (reservations ?? []).map((r) => r.id);
+
+  const relatedIds = [...convIds, ...resIds, propertyDbId];
+  if (relatedIds.length > 0) {
+    const { error: notifErr } = await supabase
+      .from("notifications")
+      .delete()
+      .in("related_entity_id", relatedIds);
+    if (notifErr) throw notifErr;
+  }
+
+  const { error: tasksErr } = await supabase
+    .from("operation_tasks")
+    .delete()
+    .eq("property_id", propertyDbId);
+  if (tasksErr) throw tasksErr;
+
+  const { error: resDelErr } = await supabase
+    .from("reservations")
+    .delete()
+    .eq("property_id", propertyDbId);
+  if (resDelErr) throw resDelErr;
+
+  const { error: convDelErr } = await supabase
+    .from("conversations")
+    .delete()
+    .eq("property_id", propertyDbId);
+  if (convDelErr) throw convDelErr;
+
+  const { error: kbErr } = await supabase
+    .from("knowledge_base_items")
+    .delete()
+    .eq("property_id", propertyDbId);
+  if (kbErr) throw kbErr;
+
+  const { error: unitsErr } = await supabase
+    .from("units")
+    .delete()
+    .eq("property_id", propertyDbId);
+  if (unitsErr) throw unitsErr;
+
+  const { error: propErr } = await supabase
+    .from("properties")
+    .delete()
+    .eq("id", propertyDbId);
+  if (propErr) throw propErr;
+}

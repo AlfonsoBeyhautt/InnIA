@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, getInitials } from "@/components/ui/avatar";
 import { useSidebar } from "@/context/sidebar-context";
 import { useSession } from "@/lib/hooks/use-session";
 import { useApi } from "@/lib/hooks/use-api";
+import type { AppStats } from "@/lib/db/app-stats";
 
 type AppSidebarProps = {
   onNavigate?: () => void;
@@ -28,6 +29,9 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
   const showLabels = mobile || expanded;
   const { user } = useSession();
   const { data: profile } = useApi<ProfileResponse>(user ? "/api/profile" : null, undefined, {
+    enabled: Boolean(user),
+  });
+  const { data: stats } = useApi<AppStats>(user ? "/api/stats" : null, undefined, {
     enabled: Boolean(user),
   });
 
@@ -66,6 +70,10 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
             const active =
               pathname === item.href || pathname.startsWith(item.href + "/");
             const Icon = item.icon;
+            const badge =
+              item.href === "/app/inbox" && stats && stats.unreadConversations > 0
+                ? String(stats.unreadConversations)
+                : item.badge;
             return (
               <Link
                 key={item.href}
@@ -82,16 +90,16 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
                 {showLabels && (
                   <>
                     <span className="flex-1 truncate">{item.title}</span>
-                    {item.badge && (
+                    {badge && (
                       <Badge className="h-5 min-w-5 justify-center border-0 bg-cream/20 px-1.5 text-[10px] text-cream">
-                        {item.badge}
+                        {badge}
                       </Badge>
                     )}
                   </>
                 )}
-                {!showLabels && item.badge && (
+                {!showLabels && badge && (
                   <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-cream/25 px-0.5 text-[9px] font-bold text-cream">
-                    {item.badge}
+                    {badge}
                   </span>
                 )}
               </Link>

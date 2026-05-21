@@ -129,7 +129,7 @@ export function mapGuest(
 }
 
 export function mapReservation(row: DbReservation): Reservation {
-  const propertySlug = (row.property?.slug ?? "pdd") as PropertyId;
+  const propertySlug = (row.property?.slug ?? row.property_id) as PropertyId;
   const unitSlug = row.unit?.slug ?? row.unit_id;
 
   return {
@@ -182,7 +182,7 @@ export function mapConversation(
   row: DbConversation,
   messages: Message[]
 ): Conversation {
-  const propertySlug = (row.property?.slug ?? "pdd") as PropertyId;
+  const propertySlug = (row.property?.slug ?? row.property_id) as PropertyId;
   const last = messages[messages.length - 1];
 
   return {

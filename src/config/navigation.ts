@@ -21,7 +21,7 @@ export type NavItem = {
 
 export const navigation: NavItem[] = [
   { title: "Inicio", href: "/app/inicio", icon: Home },
-  { title: "Centro de mensajes", href: "/app/inbox", icon: Inbox, badge: "4" },
+  { title: "Centro de mensajes", href: "/app/inbox", icon: Inbox },
   { title: "Reservas", href: "/app/reservas", icon: CalendarDays },
   { title: "Propiedades", href: "/app/propiedades", icon: BedDouble },
   { title: "Limpieza y mantenimiento", href: "/app/operaciones", icon: SprayCan },

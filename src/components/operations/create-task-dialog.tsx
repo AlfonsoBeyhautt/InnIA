@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import type { PropertyId, TaskType } from "@/types";
+import { useEffect, useState } from "react";
+import type { Property, PropertyId, TaskType } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DEMO_PROPERTY_IDS } from "@/lib/demo/constants";
 import { apiPost } from "@/lib/hooks/use-api";
 import { useToast } from "@/context/toast-context";
 import { Loader2 } from "lucide-react";
@@ -25,6 +24,7 @@ import { Loader2 } from "lucide-react";
 type CreateTaskDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  properties: Property[];
   defaultPropertyId?: PropertyId;
   onCreated: () => void;
 };
@@ -32,19 +32,33 @@ type CreateTaskDialogProps = {
 export function CreateTaskDialog({
   open,
   onOpenChange,
-  defaultPropertyId = "pdd",
+  properties,
+  defaultPropertyId,
   onCreated,
 }: CreateTaskDialogProps) {
   const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [type, setType] = useState<TaskType>("limpieza");
-  const [propertyId, setPropertyId] = useState<PropertyId>(defaultPropertyId);
+  const [propertyDbId, setPropertyDbId] = useState("");
   const [assignee, setAssignee] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const preferred = properties.find(
+      (p) => p.id === defaultPropertyId || p.dbId === defaultPropertyId
+    );
+    const first = properties[0];
+    setPropertyDbId(preferred?.dbId ?? first?.dbId ?? "");
+  }, [open, properties, defaultPropertyId]);
 
   const submit = async () => {
     if (!title.trim()) {
       toast("El título es obligatorio.", "error");
+      return;
+    }
+    if (!propertyDbId) {
+      toast("Seleccioná una propiedad.", "error");
       return;
     }
     setSaving(true);
@@ -52,7 +66,7 @@ export function CreateTaskDialog({
       await apiPost("/api/tasks", {
         title: title.trim(),
         type,
-        propertyDbId: DEMO_PROPERTY_IDS[propertyId as keyof typeof DEMO_PROPERTY_IDS],
+        propertyDbId,
         assignedTo: assignee || null,
         status: "Pendiente",
       });
@@ -89,14 +103,22 @@ export function CreateTaskDialog({
               <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={propertyId} onValueChange={(v) => setPropertyId(v as PropertyId)}>
+          <Select value={propertyDbId} onValueChange={setPropertyDbId}>
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Propiedad" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pdd">Casa Punta del Diablo</SelectItem>
-              <SelectItem value="rocha">Cabaña Rocha</SelectItem>
-              <SelectItem value="paloma">Apartamento La Paloma</SelectItem>
+              {properties.length === 0 ? (
+                <SelectItem value="_none" disabled>
+                  Sin propiedades cargadas
+                </SelectItem>
+              ) : (
+                properties.map((p) => (
+                  <SelectItem key={p.dbId ?? p.id} value={p.dbId ?? p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           <Input
@@ -109,7 +131,7 @@ export function CreateTaskDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={() => void submit()} disabled={saving}>
+          <Button onClick={() => void submit()} disabled={saving || !propertyDbId}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Crear tarea"}
           </Button>
         </div>

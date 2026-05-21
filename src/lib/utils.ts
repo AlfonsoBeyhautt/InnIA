@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { unitLabel } from "@/data/mock/units";
+import { unitLabel } from "@/lib/property-units";
 import type { PropertyId } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
@@ -23,15 +23,11 @@ export function filterByProperty<T extends { propertyId: PropertyId }>(
   return items.filter((i) => i.propertyId === selected);
 }
 
-export const PROPERTY_OPTIONS = [
-  { id: "all" as const, name: "Todas las propiedades" },
-  { id: "pdd" as const, name: "Casa Punta del Diablo" },
-  { id: "rocha" as const, name: "Cabaña Rocha" },
-  { id: "paloma" as const, name: "Apartamento La Paloma" },
-];
+export const PROPERTY_OPTIONS = [{ id: "all" as const, name: "Todas las propiedades" }];
 
 export function propertyName(id: PropertyId): string {
-  return PROPERTY_OPTIONS.find((p) => p.id === id)?.name ?? id;
+  if (id === "all") return "Todas las propiedades";
+  return id;
 }
 
 export const platformColors: Record<string, string> = {
@@ -55,11 +51,6 @@ export function unitName(unitId: string): string {
 }
 
 export function propertyAbbrev(id: PropertyId): string {
-  const map: Record<string, string> = {
-    pdd: "PDD",
-    rocha: "Rocha",
-    paloma: "Paloma",
-    all: "—",
-  };
-  return map[id] ?? id;
+  if (id === "all") return "—";
+  return id.length > 8 ? id.slice(0, 6) : id;
 }
