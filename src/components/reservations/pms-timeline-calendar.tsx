@@ -5,14 +5,17 @@ import { motion } from "framer-motion";
 import { cn, propertyName } from "@/lib/utils";
 import type { PropertyId } from "@/types";
 import type { Reservation } from "@/types";
-import { unitsFromReservations, type PropertyUnit } from "@/lib/property-units";
+import {
+  unitsFromReservations,
+  type PropertyUnit,
+} from "@/lib/property-units";
+import type { ReactNode } from "react";
 import {
   DAY_WIDTH,
   ROW_HEIGHT,
   UNIT_COL_WIDTH,
   formatDayHeader,
   generateDateRange,
-  parseDate,
   platformTimelineStyles,
   reservationBarStyle,
 } from "@/lib/calendar-utils";
@@ -32,6 +35,9 @@ type PmsTimelineCalendarProps = {
   selectedReservationId: string | null;
   onSelectReservation: (id: string) => void;
   propertyFilter?: PropertyId;
+  /** Filas de unidad cuando no hay reservas (mantiene la grilla visible) */
+  placeholderUnits?: PropertyUnit[];
+  emptyOverlay?: ReactNode;
 };
 
 function groupUnits(units: PropertyUnit[]) {
@@ -57,6 +63,8 @@ export function PmsTimelineCalendar({
   selectedReservationId,
   onSelectReservation,
   propertyFilter = "all",
+  placeholderUnits,
+  emptyOverlay,
 }: PmsTimelineCalendarProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const dayCount = VIEW_DAYS[range];
@@ -68,11 +76,16 @@ export function PmsTimelineCalendar({
 
   const units = useMemo(() => {
     let list = unitsFromReservations(reservations);
+    if (list.length === 0 && placeholderUnits?.length) {
+      list = placeholderUnits;
+    }
     if (propertyFilter !== "all") {
       list = list.filter((u) => u.propertyId === propertyFilter);
     }
     return list;
-  }, [propertyFilter, reservations]);
+  }, [propertyFilter, reservations, placeholderUnits]);
+
+  const hasReservations = reservations.length > 0;
 
   const groups = groupUnits(units);
 
@@ -87,7 +100,7 @@ export function PmsTimelineCalendar({
   return (
     <div className="ci-surface overflow-hidden border-border/70/80">
       <div ref={scrollRef} className="overflow-x-auto">
-        <div style={{ minWidth: UNIT_COL_WIDTH + timelineWidth }}>
+        <div className="relative" style={{ minWidth: UNIT_COL_WIDTH + timelineWidth }}>
           <div className="sticky top-0 z-20 flex border-b border-border/70 bg-muted/95 backdrop-blur-sm">
             <div
               className="sticky left-0 z-30 shrink-0 border-r border-border/70 bg-muted px-3 py-2.5"
@@ -125,7 +138,7 @@ export function PmsTimelineCalendar({
           </div>
 
           {groups.map((group) => (
-            <div key={group.propertyId}>
+            <div key={group.propertyId} className="relative">
               <div
                 className="sticky left-0 z-10 border-b border-border/70 bg-sand/60 px-3 py-1.5 text-xs font-bold text-foreground"
                 style={{ width: "100%" }}
@@ -201,6 +214,17 @@ export function PmsTimelineCalendar({
               })}
             </div>
           ))}
+
+          {!hasReservations && emptyOverlay && (
+            <div
+              className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+              style={{ left: UNIT_COL_WIDTH }}
+            >
+              <div className="pointer-events-auto mx-4 max-w-md rounded-2xl border border-border/60 bg-card/95 px-6 py-5 text-center shadow-[0_8px_32px_-12px_rgba(62,79,60,0.12)] backdrop-blur-sm">
+                {emptyOverlay}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -223,7 +247,7 @@ export function PmsTimelineCalendar({
 }
 
 export function getDefaultRangeStart(): Date {
-  const d = parseDate("2026-05-14");
+  const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
 }

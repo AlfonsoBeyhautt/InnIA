@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { downloadCsv } from "@/lib/export-csv";
 import { useToast } from "@/context/toast-context";
@@ -15,6 +16,7 @@ import {
 } from "@/components/reservations/pms-timeline-calendar";
 import { ReservationDetailPanel } from "@/components/reservations/reservation-detail-panel";
 import { addDays } from "@/lib/calendar-utils";
+import { unitsFromPropertyOptions } from "@/lib/property-units";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Reservation } from "@/types";
@@ -45,7 +47,7 @@ function OperationalChip({
 
 export default function ReservasPage() {
   const { toast } = useToast();
-  const { selectedProperty } = useProperty();
+  const { selectedProperty, properties } = useProperty();
   const [view, setView] = useState<CalendarViewRange>("quincena");
   const [rangeStart, setRangeStart] = useState(getDefaultRangeStart);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
@@ -80,6 +82,34 @@ export default function ReservasPage() {
     const step = view === "semana" ? 7 : view === "quincena" ? 14 : 30;
     setRangeStart((d) => addDays(d, dir * step));
   };
+
+  const placeholderUnits = useMemo(
+    () =>
+      unitsFromPropertyOptions(
+        properties.map((p) => ({ id: p.id, name: p.name })),
+        selectedProperty
+      ),
+    [properties, selectedProperty]
+  );
+
+  const calendarEmptyOverlay = (
+    <>
+      <p className="text-sm font-medium text-foreground">
+        No hay reservas cargadas para este período.
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        El calendario sigue disponible para navegar fechas y unidades.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <Button asChild size="sm" className="rounded-xl">
+          <Link href="/app/reservas">Crear reserva</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link href="/app/configuracion">Sincronizar calendario</Link>
+        </Button>
+      </div>
+    </>
+  );
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
@@ -178,23 +208,19 @@ export default function ReservasPage() {
 
       <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1 overflow-hidden p-3 sm:p-4">
-          {filtered.length === 0 ? (
-            <p className="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/30 px-6 text-center text-sm text-muted-foreground">
-              No hay reservas todavía.
-            </p>
-          ) : (
-            <PmsTimelineCalendar
-              reservations={filtered}
-              propertyFilter={selectedProperty}
-              range={view}
-              rangeStart={rangeStart}
-              selectedReservationId={selectedReservationId}
-              onSelectReservation={(id) => {
-                setSelectedReservationId(id);
-                setDetailOpen(true);
-              }}
-            />
-          )}
+          <PmsTimelineCalendar
+            reservations={filtered}
+            propertyFilter={selectedProperty}
+            range={view}
+            rangeStart={rangeStart}
+            selectedReservationId={selectedReservationId}
+            placeholderUnits={placeholderUnits}
+            emptyOverlay={filtered.length === 0 ? calendarEmptyOverlay : undefined}
+            onSelectReservation={(id) => {
+              setSelectedReservationId(id);
+              setDetailOpen(true);
+            }}
+          />
         </div>
         {detailOpen && (
           <div className="w-full max-w-[340px] shrink-0 border-l border-border/70 bg-card p-3 sm:w-[340px]">

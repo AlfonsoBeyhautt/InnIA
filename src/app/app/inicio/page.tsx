@@ -10,12 +10,12 @@ import { HomeUpcomingArrivals } from "@/components/inicio/home-upcoming-arrivals
 import { HomeMessagesCard } from "@/components/inicio/home-messages-card";
 import { HomeUrgentTasks } from "@/components/inicio/home-urgent-tasks";
 import { HomeIntegrations } from "@/components/inicio/home-integrations";
-import { HomeOpsSnapshot } from "@/components/inicio/home-ops-snapshot";
+import { HomeInsightCarousel } from "@/components/inicio/home-insight-carousel";
 import { PageSection } from "@/components/motion/page-section";
 import { useApi } from "@/lib/hooks/use-api";
 import { useSession } from "@/lib/hooks/use-session";
 import type { AppStats } from "@/lib/db/app-stats";
-import type { Conversation, OperationTask, Reservation } from "@/types";
+import type { Conversation, OperationTask, Property, Reservation } from "@/types";
 
 
 export default function InicioPage() {
@@ -32,6 +32,7 @@ export default function InicioPage() {
     user ? "/api/conversations" : null
   );
   const { data: appStats } = useApi<AppStats>(user ? "/api/stats" : null);
+  const { data: apiProperties } = useApi<Property[]>(user ? "/api/properties" : null);
 
   const refetchAll = useCallback(() => {
     void refetchReservations();
@@ -69,6 +70,14 @@ export default function InicioPage() {
   );
 
   const unitCount = appStats?.unitCount ?? 0;
+  const properties = useMemo(() => preferApi(apiProperties), [apiProperties]);
+  const propertiesForInsights = useMemo(
+    () =>
+      selectedProperty === "all"
+        ? properties
+        : properties.filter((p) => (p.slug ?? p.id) === selectedProperty),
+    [properties, selectedProperty]
+  );
 
   return (
     <div className="ci-page ci-page-wide min-h-full space-y-4 pb-8">
@@ -102,7 +111,13 @@ export default function InicioPage() {
           <HomeIntegrations />
         </PageSection>
         <PageSection delay={0.1}>
-          <HomeOpsSnapshot />
+          <HomeInsightCarousel
+            conversations={filteredConversations}
+            reservations={filteredReservations}
+            tasks={filteredTasks}
+            properties={propertiesForInsights}
+            unitCount={unitCount}
+          />
         </PageSection>
       </div>
     </div>
