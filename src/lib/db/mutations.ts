@@ -639,7 +639,7 @@ export async function upsertIntegrationConfig(
     sync_status?: string;
     error_message?: string | null;
     config?: Record<string, unknown>;
-    accessToken?: string;
+    accessToken?: string | null;
   }
 ) {
   const patch: Database["public"]["Tables"]["integrations"]["Update"] = {
@@ -651,7 +651,8 @@ export async function upsertIntegrationConfig(
     patch.config = input.config as unknown as Database["public"]["Tables"]["integrations"]["Update"]["config"];
   }
   if (input.accessToken !== undefined) {
-    patch.access_token_encrypted = input.accessToken;
+    patch.access_token_encrypted =
+      input.accessToken && input.accessToken.length > 0 ? input.accessToken : null;
   }
   return upsertIntegration(provider, patch);
 }

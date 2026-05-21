@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useApi } from "@/lib/hooks/use-api";
 import { useSession } from "@/lib/hooks/use-session";
 import type { AppStats } from "@/lib/db/app-stats";
@@ -57,10 +58,16 @@ function Toggle({ on }: { on: boolean; label: string }) {
   );
 }
 
-export function SettingsDashboard() {
+function SettingsDashboardInner() {
+  const searchParams = useSearchParams();
   const { user } = useSession();
   const { data: stats } = useApi<AppStats>(user ? "/api/stats" : null);
   const [active, setActive] = useState<SectionId>("integraciones");
+
+  useEffect(() => {
+    const section = searchParams.get("section");
+    if (section === "integraciones") setActive("integraciones");
+  }, [searchParams]);
   const [autoReply, setAutoReply] = useState(true);
   const [nightMode, setNightMode] = useState(false);
 
@@ -192,5 +199,13 @@ export function SettingsDashboard() {
         )}
       </div>
     </div>
+  );
+}
+
+export function SettingsDashboard() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Cargando…</div>}>
+      <SettingsDashboardInner />
+    </Suspense>
   );
 }

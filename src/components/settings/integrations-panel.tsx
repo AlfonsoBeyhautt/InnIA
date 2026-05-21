@@ -15,15 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { WhatsAppIntegrationPanel } from "@/components/settings/whatsapp-integration-panel";
+import type { IntegrationRow } from "@/lib/integrations/whatsapp/types";
 
 const providerMeta: Record<
-  IntegrationProvider,
+  Exclude<IntegrationProvider, "whatsapp_business">,
   { label: string; desc: string; partnerNote?: string }
 > = {
-  whatsapp_business: {
-    label: "WhatsApp Business",
-    desc: "Mensajes reales vía Meta Cloud API",
-  },
   email: { label: "Email", desc: "Envío con Resend" },
   airbnb: {
     label: "Airbnb",
@@ -39,17 +37,12 @@ const providerMeta: Record<
   },
 };
 
-type IntegrationRow = {
-  id: string;
-  provider: IntegrationProvider;
-  status: string;
-  last_sync_at: string | null;
-  sync_status: string | null;
-  error_message: string | null;
-  config: Record<string, unknown>;
-};
-
 const EMPTY: IntegrationRow[] = [];
+
+const otherProviders = Object.keys(providerMeta) as Exclude<
+  IntegrationProvider,
+  "whatsapp_business"
+>[];
 
 export function IntegrationsPanel() {
   const { toast } = useToast();
@@ -60,16 +53,12 @@ export function IntegrationsPanel() {
   const [saving, setSaving] = useState(false);
 
   const rows = data ?? [];
-  const providers = Object.keys(providerMeta) as IntegrationProvider[];
+  const whatsappRow = rows.find((r) => r.provider === "whatsapp_business");
 
   const openConfig = (provider: IntegrationProvider) => {
     const row = rows.find((r) => r.provider === provider);
     const cfg = row?.config ?? {};
     setForm({
-      phone_number_id: String(cfg.phone_number_id ?? ""),
-      business_account_id: String(cfg.business_account_id ?? ""),
-      verify_token: "",
-      access_token: "",
       from_email: String(cfg.from_email ?? ""),
       from_name: String(cfg.from_name ?? ""),
       api_key: "",
@@ -79,18 +68,11 @@ export function IntegrationsPanel() {
   };
 
   const saveConfig = async () => {
-    if (!configuring) return;
+    if (!configuring || configuring === "whatsapp_business") return;
     setSaving(true);
     try {
       const body: Record<string, unknown> = { provider: configuring };
-      if (configuring === "whatsapp_business") {
-        body.config = {
-          phone_number_id: form.phone_number_id,
-          business_account_id: form.business_account_id,
-          verify_token: form.verify_token || undefined,
-        };
-        if (form.access_token) body.access_token = form.access_token;
-      } else if (configuring === "email") {
+      if (configuring === "email") {
         body.config = {
           provider: "resend",
           from_email: form.from_email,
@@ -124,7 +106,7 @@ export function IntegrationsPanel() {
         body: JSON.stringify({ provider, status: "disconnected", sync_status: null }),
       });
       await refetch();
-      toast(`${providerMeta[provider].label} desconectado.`, "info");
+      toast(`${providerMeta[provider as keyof typeof providerMeta].label} desconectado.`, "info");
     } catch {
       toast("No se pudo desconectar.", "error");
     }
@@ -140,11 +122,11 @@ export function IntegrationsPanel() {
         toast(result.message, "success");
       } else {
         await apiPost("/api/integrations/sync", { provider });
-        toast(`${providerMeta[provider].label} sincronizado.`, "success");
+        toast(`${providerMeta[provider as keyof typeof providerMeta].label} sincronizado.`, "success");
       }
       await refetch();
     } catch {
-      toast(`No se pudo sincronizar ${providerMeta[provider].label}.`, "error");
+      toast(`No se pudo sincronizar.`, "error");
     } finally {
       setSyncing(null);
     }
@@ -163,8 +145,10 @@ export function IntegrationsPanel() {
 
   return (
     <>
+      <WhatsAppIntegrationPanel row={whatsappRow} onRefetch={refetch} />
+
       <ul className="space-y-3">
-        {providers.map((provider) => {
+        {otherProviders.map((provider) => {
           const row = rows.find((r) => r.provider === provider);
           const meta = providerMeta[provider];
           const connected = row?.status === "connected" || row?.status === "pending";
@@ -244,39 +228,9 @@ export function IntegrationsPanel() {
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {configuring ? providerMeta[configuring].label : "Integración"}
+              {configuring ? providerMeta[configuring as keyof typeof providerMeta].label : "Integración"}
             </DialogTitle>
           </DialogHeader>
-          {configuring === "whatsapp_business" && (
-            <div className="space-y-2">
-              <Input
-                placeholder="Phone Number ID"
-                value={form.phone_number_id}
-                onChange={(e) => setForm((f) => ({ ...f, phone_number_id: e.target.value }))}
-              />
-              <Input
-                placeholder="Business Account ID"
-                value={form.business_account_id}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, business_account_id: e.target.value }))
-                }
-              />
-              <Input
-                placeholder="Access Token"
-                type="password"
-                value={form.access_token}
-                onChange={(e) => setForm((f) => ({ ...f, access_token: e.target.value }))}
-              />
-              <Input
-                placeholder="Verify Token"
-                value={form.verify_token}
-                onChange={(e) => setForm((f) => ({ ...f, verify_token: e.target.value }))}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Webhook: {typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/whatsapp` : "/api/webhooks/whatsapp"}
-              </p>
-            </div>
-          )}
           {configuring === "email" && (
             <div className="space-y-2">
               <Input

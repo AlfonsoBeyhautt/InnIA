@@ -110,6 +110,16 @@ export async function processWhatsAppWebhookPayload(payload: {
           })
           .eq("id", conversationId);
 
+        await admin.from("notifications").insert({
+          owner_id: integration.owner_id,
+          type: "mensaje",
+          title: "Nuevo mensaje de WhatsApp",
+          body: msg.text.body.slice(0, 200),
+          read: false,
+          related_entity_type: "conversation",
+          related_entity_id: conversationId,
+        });
+
         processed += 1;
       }
     }

@@ -41,13 +41,18 @@ export async function PATCH(req: NextRequest) {
 
     if (config) {
       if (provider === "whatsapp_business") {
+        const method =
+          config.connection_method === "meta" ? "meta" : "manual";
         const ok = isWhatsAppConfigComplete({
-          ...config,
+          phone_number_id: String(config.phone_number_id ?? ""),
+          business_account_id: config.business_account_id as string | undefined,
           access_token:
-            (body.access_token as string) ?? (config.access_token as string),
+            (body.access_token as string) ?? (config.access_token as string) ?? "",
+          connection_method: method,
         });
         status = ok ? "connected" : "pending";
         sync_status = ok ? "ready" : "pending_credentials";
+        config.connection_method = method;
       }
       if (provider === "email") {
         const ok = isEmailConfigComplete({
@@ -63,12 +68,18 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    const accessToken =
+      body.access_token === null || body.access_token === ""
+        ? null
+        : (body.access_token as string | undefined);
+
     const row = await upsertIntegrationConfig(provider, {
       status,
       sync_status,
       error_message: body.error_message ?? null,
       config,
-      accessToken: body.access_token as string | undefined,
+      accessToken:
+        accessToken !== undefined ? accessToken : undefined,
     });
 
     return jsonOk({

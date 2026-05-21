@@ -7,6 +7,9 @@ export type WhatsAppIntegrationConfig = {
   verify_token?: string;
   default_property_id?: string;
   guest_phone?: string;
+  display_phone_number?: string;
+  connected_phone?: string;
+  connection_method?: "meta" | "manual";
 };
 
 export type EmailIntegrationConfig = {

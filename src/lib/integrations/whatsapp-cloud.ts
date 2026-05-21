@@ -47,3 +47,39 @@ export function verifyWhatsAppWebhook(
   }
   return null;
 }
+
+export async function testWhatsAppConnection(
+  config: WhatsAppIntegrationConfig
+): Promise<
+  | { ok: true; displayPhoneNumber?: string; verifiedName?: string }
+  | { ok: false; error: string }
+> {
+  if (!config.phone_number_id?.trim() || !config.access_token?.trim()) {
+    return {
+      ok: false,
+      error:
+        "Faltan credenciales. Conectá con Meta o completá la configuración avanzada.",
+    };
+  }
+
+  const res = await fetch(
+    `${GRAPH_API}/${config.phone_number_id}?fields=display_phone_number,verified_name,quality_rating`,
+    { headers: { Authorization: `Bearer ${config.access_token}` } }
+  );
+
+  const json = (await res.json()) as {
+    display_phone_number?: string;
+    verified_name?: string;
+    error?: { message: string };
+  };
+
+  if (!res.ok) {
+    return { ok: false, error: json.error?.message ?? `Error ${res.status} al contactar Meta` };
+  }
+
+  return {
+    ok: true,
+    displayPhoneNumber: json.display_phone_number,
+    verifiedName: json.verified_name,
+  };
+}
