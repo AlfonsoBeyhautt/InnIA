@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Bot, Plus, SprayCan, Wrench } from "lucide-react";
 import { useProperty } from "@/context/property-context";
 import { filterByProperty } from "@/lib/utils";
-import { operationTasks as mockTasks } from "@/data/mock";
+import { preferApi } from "@/lib/prefer-api";
 import { useApi, apiPatch } from "@/lib/hooks/use-api";
 import type { OperationTask, TaskStatus } from "@/types";
 import { OperationsKanban } from "@/components/operations/operations-kanban";
@@ -20,9 +20,9 @@ export default function OperacionesPage() {
   const { selectedProperty } = useProperty();
   const { data, refetch } = useApi<OperationTask[]>(
     `/api/tasks${selectedProperty !== "all" ? `?property=${selectedProperty}` : ""}`,
-    mockTasks
+    []
   );
-  const operationTasks = data && data.length > 0 ? data : mockTasks;
+  const operationTasks = preferApi(data);
   const [detailTask, setDetailTask] = useState<OperationTask | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);

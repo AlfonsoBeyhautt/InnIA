@@ -6,7 +6,7 @@ import { downloadCsv } from "@/lib/export-csv";
 import { useToast } from "@/context/toast-context";
 import { useProperty } from "@/context/property-context";
 import { filterByProperty, propertyName } from "@/lib/utils";
-import { reservations as mockReservations } from "@/data/mock";
+import { preferApi } from "@/lib/prefer-api";
 import { useApi } from "@/lib/hooks/use-api";
 import {
   PmsTimelineCalendar,
@@ -53,9 +53,9 @@ export default function ReservasPage() {
 
   const { data, refetch } = useApi<Reservation[]>(
     `/api/reservations${selectedProperty !== "all" ? `?property=${selectedProperty}` : ""}`,
-    mockReservations
+    []
   );
-  const reservations = data && data.length > 0 ? data : mockReservations;
+  const reservations = preferApi(data);
 
   useEffect(() => {
     const onReady = () => void refetch();

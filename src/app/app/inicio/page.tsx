@@ -3,11 +3,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useProperty } from "@/context/property-context";
 import { filterByProperty } from "@/lib/utils";
-import {
-  conversations as mockConversations,
-  operationTasks as mockTasks,
-  reservations as mockReservations,
-} from "@/data/mock";
+import { preferApi } from "@/lib/prefer-api";
 import { HomeHero } from "@/components/inicio/home-hero";
 import { HomeMetricCards } from "@/components/inicio/home-metric-cards";
 import { HomeUpcomingArrivals } from "@/components/inicio/home-upcoming-arrivals";
@@ -20,10 +16,6 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useSession } from "@/lib/hooks/use-session";
 import type { Conversation, OperationTask, Reservation } from "@/types";
 
-function preferApi<T>(api: T[] | null | undefined, mock: T[]): T[] {
-  const rows = api ?? [];
-  return rows.length > 0 ? rows : mock;
-}
 
 export default function InicioPage() {
   const { selectedProperty } = useProperty();
@@ -52,12 +44,12 @@ export default function InicioPage() {
   }, [refetchAll]);
 
   const reservations = useMemo(
-    () => preferApi(apiReservations, mockReservations),
+    () => preferApi(apiReservations),
     [apiReservations]
   );
-  const operationTasks = useMemo(() => preferApi(apiTasks, mockTasks), [apiTasks]);
+  const operationTasks = useMemo(() => preferApi(apiTasks), [apiTasks]);
   const conversations = useMemo(
-    () => preferApi(apiConversations, mockConversations),
+    () => preferApi(apiConversations),
     [apiConversations]
   );
 

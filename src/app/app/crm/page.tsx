@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { guests as mockGuests } from "@/data/mock";
+import { preferApi } from "@/lib/prefer-api";
 import { GuestDatabase } from "@/components/crm/guest-database";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/lib/hooks/use-api";
@@ -12,8 +12,8 @@ import { Download, UserPlus } from "lucide-react";
 
 export default function CRMPage() {
   const { toast } = useToast();
-  const { data, loading, error, refetch } = useApi<Guest[]>("/api/guests", mockGuests);
-  const guests = data && data.length > 0 ? data : mockGuests;
+  const { data, loading, error, refetch } = useApi<Guest[]>("/api/guests", []);
+  const guests = preferApi(data);
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>(guests);
   const [addSignal, setAddSignal] = useState(0);
 
@@ -49,7 +49,7 @@ export default function CRMPage() {
             incidentes y datos para alquiler temporal.
             {error && (
               <span className="mt-1 block text-amber-700">
-                Modo local (mock): {error}
+                Error al cargar: {error}
               </span>
             )}
           </p>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useProperty } from "@/context/property-context";
-import { properties as mockProperties, reservations as mockReservations } from "@/data/mock";
+import { preferApi } from "@/lib/prefer-api";
 import { PropertyCard } from "@/components/properties/property-card";
 import { PropertyEditor } from "@/components/properties/property-editor";
 import { useApi } from "@/lib/hooks/use-api";
@@ -12,16 +12,14 @@ export default function PropiedadesPage() {
   const { selectedProperty } = useProperty();
   const { data: apiProperties, refetch: refetchProperties } = useApi<Property[]>(
     "/api/properties",
-    mockProperties
+    []
   );
   const { data: apiReservations, refetch: refetchReservations } = useApi<Reservation[]>(
     "/api/reservations",
-    mockReservations
+    []
   );
-  const properties =
-    apiProperties && apiProperties.length > 0 ? apiProperties : mockProperties;
-  const reservations =
-    apiReservations && apiReservations.length > 0 ? apiReservations : mockReservations;
+  const properties = preferApi(apiProperties);
+  const reservations = preferApi(apiReservations);
 
   const [detail, setDetail] = useState<Property | null>(null);
   const [list, setList] = useState<Property[]>(properties);

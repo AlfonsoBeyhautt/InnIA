@@ -1,11 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  insights,
-  knowledgeBaseItems,
-  suggestedAutoReplies,
-} from "@/data/mock";
+const insights: import("@/types").Insight[] = [];
+const knowledgeBaseItems: import("@/types").KnowledgeBaseItem[] = [];
+const suggestedAutoReplies: import("@/types").SuggestedAutoReply[] = [];
 import { AiInsightCard } from "@/components/insights/ai-insight-card";
 import { KnowledgeBaseStatus } from "@/components/insights/knowledge-base-status";
 import { SuggestedAutoReplyCard } from "@/components/insights/suggested-auto-reply-card";
@@ -70,14 +68,7 @@ export default function ReportesPage() {
       <PageSection delay={0.04}>
         {visibleInsights.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Todos los reportes activos fueron marcados como resueltos.{" "}
-            <button
-              type="button"
-              className="font-medium text-primary hover:underline"
-              onClick={() => setResolvedIds(new Set())}
-            >
-              Restaurar lista
-            </button>
+            Sin reportes todavía. Conectá canales y cargá propiedades para generar análisis con IA.
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

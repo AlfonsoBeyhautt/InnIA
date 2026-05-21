@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { PropertySwitcher } from "@/components/layout/property-switcher";
 import { NotificationsPanel } from "@/components/layout/notifications-panel";
-import { notifications as mockNotifications, type AppNotification } from "@/data/mock/notifications";
+import type { AppNotification } from "@/data/mock/notifications";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, getInitials } from "@/components/ui/avatar";
 import {
@@ -122,7 +122,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const items: AppNotification[] = useMemo(() => {
     if (!user || unauthorized) return [];
     if (data && data.length > 0) return data.map(mapNotification);
-    return mockNotifications;
+    return [];
   }, [data, user, unauthorized]);
 
   const unread = items.filter((n) => !n.read).length;

@@ -9,7 +9,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { conversations as mockConversations } from "@/data/mock";
 import { formatTimestamp } from "@/lib/inbox-ai";
 import { apiPost } from "@/lib/hooks/use-api";
 import { useToast } from "@/context/toast-context";
@@ -94,7 +93,7 @@ type AiProcessApiResult = {
 export function InboxProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { selectedProperty } = useProperty();
-  const [items, setItems] = useState<Conversation[]>(mockConversations);
+  const [items, setItems] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyses, setAnalyses] = useState<Record<string, AiAnalysis>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -115,7 +114,7 @@ export function InboxProvider({ children }: { children: ReactNode }) {
         if (!selectedId && data[0]) setSelectedId(data[0].id);
       }
     } catch {
-      setItems(JSON.parse(JSON.stringify(mockConversations)));
+      setItems([]);
     } finally {
       setLoading(false);
     }

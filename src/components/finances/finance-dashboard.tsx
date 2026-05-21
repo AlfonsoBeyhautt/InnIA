@@ -16,8 +16,21 @@ import {
 import { motion } from "framer-motion";
 import { Download, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency, propertyName } from "@/lib/utils";
-import { financeSummary, monthlyRevenue, transactions } from "@/data/mock";
-import { financeAiInsights } from "@/data/mock/operations";
+const financeSummary = {
+  ingresos: 0,
+  gastos: 0,
+  gananciaNeta: 0,
+  gastosLimpieza: 0,
+  gastosMantenimiento: 0,
+};
+const monthlyRevenue: { mes: string; monto: number }[] = [];
+const transactions: import("@/types").FinancialTransaction[] = [];
+const financeAiInsights: {
+  id: string;
+  text: string;
+  propertyId?: PropertyId;
+  platform?: Platform;
+}[] = [];
 import { PlatformBadge } from "@/components/inbox/platform-badge";
 import { Badge } from "@/components/ui/badge";
 import { PageSection, MotionCard } from "@/components/motion/page-section";
