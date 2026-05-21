@@ -151,9 +151,34 @@ function SettingsDashboardInner() {
             <div className="space-y-4 rounded-xl border border-border/70 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
+                  <p className="font-medium">Procesar mensajes automáticamente</p>
+                  <p className="text-xs text-muted-foreground">
+                    Al llegar un mensaje, la IA clasifica y responde sin botón manual
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={savingAi}
+                  onClick={() =>
+                    void patchAiSettings({
+                      ai_auto_process_enabled: !(
+                        aiSettings?.ai_auto_process_enabled !== false
+                      ),
+                    })
+                  }
+                >
+                  <Toggle
+                    on={aiSettings?.ai_auto_process_enabled !== false}
+                    label="AutoProcess"
+                  />
+                </button>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between gap-4">
+                <div>
                   <p className="font-medium">Respuestas automáticas</p>
                   <p className="text-xs text-muted-foreground">
-                    La IA responde consultas frecuentes sin intervención
+                    Enviar por WhatsApp cuando la IA tiene confianza alta
                   </p>
                 </div>
                 <button

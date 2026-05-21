@@ -238,7 +238,7 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
                 ) : (
                   <Zap className="h-3.5 w-3.5" />
                 )}
-                {isProcessing ? "Procesando…" : "Procesar con IA"}
+                {isProcessing ? "Procesando…" : "Reprocesar con IA"}
               </Button>
               {analysis?.suggestedResponse &&
                 !analysis.autoSentAt &&

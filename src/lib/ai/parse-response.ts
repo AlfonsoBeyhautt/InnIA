@@ -1,6 +1,5 @@
-import {
-  AI_DECISION_THRESHOLDS,
-} from "@/lib/ai/config";
+import { AI_DECISION_THRESHOLDS } from "@/lib/ai/config";
+import type { ConversationGuestContext } from "@/lib/ai/conversation-entities";
 import type { AiDecision } from "@/lib/supabase/types";
 
 const VALID_DECISIONS: AiDecision[] = [
@@ -17,6 +16,7 @@ export type ParsedAiResponse = {
   usedKnowledge: string[];
   missingInformation: string[];
   reason: string;
+  extractedFacts?: Partial<ConversationGuestContext>;
 };
 
 function clampConfidence(n: unknown): number {
@@ -152,6 +152,25 @@ export function parseAndApplyAiRules(
     decision = "informacion_insuficiente";
   }
 
+  const extractedRaw = parsed.extractedFacts ?? parsed.extracted_facts;
+  let extractedFacts: Partial<ConversationGuestContext> | undefined;
+  if (extractedRaw && typeof extractedRaw === "object") {
+    const ex = extractedRaw as Record<string, unknown>;
+    extractedFacts = {};
+    if (typeof ex.check_in === "string" && ex.check_in) {
+      extractedFacts.check_in = ex.check_in;
+    }
+    if (typeof ex.check_out === "string" && ex.check_out) {
+      extractedFacts.check_out = ex.check_out;
+    }
+    if (ex.guests_count != null && Number(ex.guests_count) > 0) {
+      extractedFacts.guests_count = Number(ex.guests_count);
+    }
+    if (ex.pets === true || ex.pets === false) {
+      extractedFacts.pets = ex.pets;
+    }
+  }
+
   return {
     decision,
     confidence,
@@ -159,6 +178,7 @@ export function parseAndApplyAiRules(
     usedKnowledge,
     missingInformation,
     reason,
+    extractedFacts,
   };
 }
 

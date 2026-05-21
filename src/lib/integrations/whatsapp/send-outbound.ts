@@ -1,5 +1,6 @@
 import { getIntegrations, getConversationById } from "@/lib/db/queries";
 import { sendMessage } from "@/lib/db/mutations";
+import { insertMessageForOwner } from "@/lib/db/owner-mutations";
 import { mapMessage } from "@/lib/db/mappers";
 import {
   sendWhatsAppTextMessage,
@@ -172,4 +173,131 @@ export async function deliverWhatsAppMessage(input: {
     conversation: conv,
     meta,
   };
+}
+
+/** Service-role send for webhook auto-reply (no user session) */
+export async function deliverWhatsAppForOwner(input: {
+  admin: ReturnType<typeof createServiceRoleClient>;
+  ownerId: string;
+  conversationId: string;
+  text: string;
+  senderType: "owner" | "ai";
+  senderName?: string;
+  aiGenerated?: boolean;
+  aiAutoSent?: boolean;
+}): Promise<{ messageId: string; metaMessageId: string }> {
+  const messageBody = input.text.trim();
+  if (!messageBody) {
+    throw new WhatsAppSendError("El mensaje está vacío.");
+  }
+
+  const { data: convRow } = await input.admin
+    .from("conversations")
+    .select("id, guest_id, channel")
+    .eq("id", input.conversationId)
+    .eq("owner_id", input.ownerId)
+    .maybeSingle();
+
+  if (!convRow) throw new WhatsAppSendError("Conversación no encontrada.");
+  const channel = String(convRow.channel ?? "").toLowerCase();
+  if (channel !== "whatsapp" && channel !== "whatsapp_business") {
+    throw new WhatsAppSendError("Esta conversación no es de WhatsApp.");
+  }
+
+  const { data: integrationRow } = await input.admin
+    .from("integrations")
+    .select("*")
+    .eq("owner_id", input.ownerId)
+    .eq("provider", "whatsapp_business")
+    .maybeSingle();
+
+  const waConfig = integrationRow
+    ? ({
+        ...(integrationRow.config as Record<string, unknown>),
+        access_token: integrationRow.access_token_encrypted ?? undefined,
+      } as WhatsAppIntegrationConfig)
+    : null;
+
+  if (!waConfig || !isWhatsAppConfigComplete(waConfig)) {
+    throw new WhatsAppSendError(
+      "Token de WhatsApp faltante o vencido. Volvé a conectar WhatsApp."
+    );
+  }
+
+  const integrationId = integrationRow?.id;
+
+  const { data: guest } = await input.admin
+    .from("guests")
+    .select("phone")
+    .eq("id", convRow.guest_id)
+    .maybeSingle();
+
+  const rawPhone = guest?.phone?.trim();
+  if (!rawPhone) {
+    throw new WhatsAppSendError("El huésped no tiene teléfono asociado.");
+  }
+
+  const normalizedPhone = normalizeWhatsAppPhone(rawPhone);
+  const phoneNumberId = String(waConfig.phone_number_id).trim();
+
+  logOutbound("send_attempt", {
+    conversationId: input.conversationId,
+    phone_number_id: phoneNumberId,
+    owner_id: input.ownerId,
+    message_length: messageBody.length,
+    sender_type: input.senderType,
+    source: "auto_process",
+  });
+
+  let meta: WhatsAppSendResult;
+  try {
+    meta = await sendWhatsAppTextMessage(waConfig, normalizedPhone, messageBody);
+    if (integrationId) {
+      await appendOutboundDebug(input.admin, integrationId, {
+        recipient: normalizedPhone,
+        phone_number_id: phoneNumberId,
+        status: "success",
+        message_length: messageBody.length,
+      });
+    }
+  } catch (e) {
+    const err =
+      e instanceof WhatsAppSendError
+        ? e
+        : new WhatsAppSendError(e instanceof Error ? e.message : "Error al enviar por WhatsApp");
+    if (integrationId) {
+      await appendOutboundDebug(input.admin, integrationId, {
+        recipient: normalizedPhone,
+        phone_number_id: phoneNumberId,
+        status: "error",
+        message_length: messageBody.length,
+        meta_error: err.message,
+        meta_code: err.metaCode,
+      });
+    }
+    throw err;
+  }
+
+  const msgRow = await insertMessageForOwner(input.admin, {
+    conversationId: input.conversationId,
+    senderType: input.senderType,
+    body: messageBody,
+    senderName: input.senderName ?? "InnIA",
+    channel: "whatsapp",
+    externalMessageId: meta.messageId,
+    aiGenerated: input.aiGenerated ?? input.senderType === "ai",
+    aiAutoSent: input.aiAutoSent ?? false,
+  });
+
+  await input.admin
+    .from("conversations")
+    .update({
+      last_message_preview: messageBody.slice(0, 120),
+      last_message_at: new Date().toISOString(),
+      unread: false,
+    })
+    .eq("id", input.conversationId)
+    .eq("owner_id", input.ownerId);
+
+  return { messageId: msgRow.id, metaMessageId: meta.messageId };
 }

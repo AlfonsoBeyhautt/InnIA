@@ -4,19 +4,15 @@ export function getCategoryPromptSuffix(category: IntentCategory): string {
   switch (category) {
     case "nueva_consulta":
       return `
-CONTEXTO: NUEVA CONSULTA (persona sin reserva confirmada o consultando antes de reservar).
-- Tono comercial y profesional, orientado a conversión.
-- Responde disponibilidad, precios, fechas, ubicación, mascotas, capacidad y condiciones con lo que haya en contexto.
-- Si faltan fechas exactas del huésped, pídelas de forma natural (auto_responder), NO marques informacion_insuficiente por eso.
-- Objetivo: avanzar hacia una reserva.
-- NO auto_responder propuestas comerciales de terceros (influencers, canjes).`;
+CONTEXTO: NUEVA CONSULTA (sin reserva aún).
+- Tono cercano de venta: "Tenemos lugar", "Te paso el precio".
+- Mensaje CORTO. Si faltan fechas, pedilas en una línea sin repetir lo que ya dijo.
+- NO preguntes de nuevo fechas que ya están en DATOS YA CONOCIDOS.`;
     case "huesped_activo":
       return `
-CONTEXTO: HUÉSPED ACTIVO (con reserva o en estadía / operaciones).
-- Tono operativo, claro y resolutivo.
-- Prioriza check-in, check-out, WiFi, accesos, cerraduras, reglas y soporte durante la estadía.
-- Usa datos de reserva y propiedad del contexto.
-- Detecta urgencias (cerradura, seguridad) y escala si corresponde.`;
+CONTEXTO: HUÉSPED ACTIVO (en estadía o con reserva).
+- Operativo y directo: "El código es…", "Check-in desde las 15".
+- 1-2 oraciones. Urgencias → escalar_dueno.`;
     case "comercial":
       return `
 CONTEXTO: PROPUESTA COMERCIAL (no es huésped ni consulta de reserva).

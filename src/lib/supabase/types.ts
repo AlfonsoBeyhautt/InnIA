@@ -256,6 +256,7 @@ export interface Database {
           ai_status: string | null;
           intent_category: string;
           intent_manual_override: boolean;
+          guest_context: Json;
           labels: string[];
           sentiment: string | null;
           last_message_preview: string | null;
@@ -276,6 +277,7 @@ export interface Database {
           ai_status?: string | null;
           intent_category?: string;
           intent_manual_override?: boolean;
+          guest_context?: Json;
           labels?: string[];
           sentiment?: string | null;
           last_message_preview?: string | null;

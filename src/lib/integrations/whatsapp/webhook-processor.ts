@@ -7,6 +7,7 @@ import {
 } from "@/lib/integrations/whatsapp/webhook-debug";
 import { resolveWhatsAppIntegration } from "@/lib/integrations/whatsapp/resolve-integration";
 import { applyIntentToConversation } from "@/lib/conversations/apply-intent";
+import { autoProcessIncomingGuestMessage } from "@/lib/ai/pipeline";
 
 /** DB channel value — mapped to platform "WhatsApp" in UI */
 export const WHATSAPP_CHANNEL = "whatsapp";
@@ -216,21 +217,25 @@ async function processInboundMessage(
       ? new Date(Number(msg.timestamp) * 1000).toISOString()
       : new Date().toISOString();
 
-    const { error: msgErr } = await admin.from("messages").insert({
-      conversation_id: conversationId,
-      sender_type: "guest",
-      sender_name: guestName,
-      body,
-      channel: WHATSAPP_CHANNEL,
-      external_message_id: msg.id,
-      ai_generated: false,
-      ai_auto_sent: false,
-    });
+    const { data: insertedMsg, error: msgErr } = await admin
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        sender_type: "guest",
+        sender_name: guestName,
+        body,
+        channel: WHATSAPP_CHANNEL,
+        external_message_id: msg.id,
+        ai_generated: false,
+        ai_auto_sent: false,
+      })
+      .select("id")
+      .single();
 
-    if (msgErr) {
+    if (msgErr || !insertedMsg) {
       logWebhook("error", "message_insert_failed", {
-        message: msgErr.message,
-        code: msgErr.code,
+        message: msgErr?.message,
+        code: msgErr?.code,
       });
       return "error";
     }
@@ -286,9 +291,17 @@ async function processInboundMessage(
       );
     }
 
+    await autoProcessIncomingGuestMessage({
+      admin,
+      ownerId: integration.owner_id,
+      conversationId,
+      messageId: insertedMsg.id,
+    });
+
     logWebhook("info", "message_saved", {
       conversationId,
       messageId: msg.id,
+      dbMessageId: insertedMsg.id,
       from: msg.from,
     });
 

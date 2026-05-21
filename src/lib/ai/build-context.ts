@@ -1,6 +1,11 @@
 import type { KnowledgeBaseItem, Message, Property, Unit } from "@/types";
 import type { Tables } from "@/lib/supabase/types";
 import { AI_RECENT_MESSAGES_LIMIT } from "@/lib/ai/config";
+import {
+  formatGuestContextBlock,
+  type ConversationGuestContext,
+} from "@/lib/ai/conversation-entities";
+import { shouldUseGreeting } from "@/lib/ai/conversational-style";
 
 type GuestSummary = { fullName: string } | null;
 
@@ -13,9 +18,12 @@ export function buildAiUserPrompt(input: {
   reservation: Tables<"reservations"> | null;
   unit: Unit | null;
   recentMessages: Message[];
+  guestContext?: ConversationGuestContext | null;
+  platform?: string;
 }): string {
   const { property, knowledge, reservation, unit, recentMessages } = input;
   const guestName = input.guest?.fullName ?? input.guestNameFallback;
+  const allowGreeting = shouldUseGreeting(recentMessages);
 
   const knowledgeBlock = knowledge.length
     ? knowledge
@@ -24,64 +32,63 @@ export function buildAiUserPrompt(input: {
             `• [${k.category ?? k.topic}] (${k.status}): ${k.content?.trim() || "(sin contenido)"}`
         )
         .join("\n")
-    : "(sin entradas en knowledge_base_items)";
+    : "(sin entradas en base de conocimiento)";
 
   const propertyBlock = property
-    ? `Nombre: ${property.name}
+    ? `Nombre comercial: ${property.name} (hablá como "nosotros", no como tercero)
 Ubicación: ${property.location}
-Check-in: ${property.checkInTime ?? "no indicado"} — Instrucciones llegada: ${property.checkInInstructions?.trim() || "no cargadas"}
-Check-out: ${property.checkOutTime ?? "no indicado"}
-WiFi red: ${property.wifiName?.trim() || "no cargada"}
-WiFi clave: ${property.wifiPassword?.trim() ? "(disponible en sistema)" : "no cargada"}
+Check-in: ${property.checkInTime ?? "consultar"} — Llegada: ${property.checkInInstructions?.trim() || "no cargado"}
+Check-out: ${property.checkOutTime ?? "consultar"}
+WiFi: ${property.wifiName?.trim() ? `red ${property.wifiName}` : "no cargado"}${property.wifiPassword?.trim() ? " (clave en sistema)" : ""}
 Estacionamiento: ${property.parkingInfo?.trim() || "no cargado"}
 Mascotas: ${property.petPolicy?.trim() || "no cargado"}
-Reglas de la casa: ${property.houseRules?.trim() || "no cargadas"}
-Cerradura / acceso: ${property.lockInstructions?.trim() || "no cargado"}
-Emergencias: ${property.emergencyContact?.trim() || "no cargado"}
-Notas internas (solo referencia, no compartir tal cual): ${property.internalNotes?.trim() || "—"}`
-    : "(propiedad no encontrada)";
+Reglas: ${property.houseRules?.trim() || "no cargadas"}
+Acceso/cerradura: ${property.lockInstructions?.trim() || "no cargado"}
+Emergencias: ${property.emergencyContact?.trim() || "no cargado"}`
+    : "(sin datos de propiedad)";
 
   const reservationBlock = reservation
-    ? `ID reserva: ${reservation.id}
-Fechas: ${reservation.check_in} → ${reservation.check_out}
-Estado: ${reservation.status}
-Huéspedes: ${reservation.guests_count}
-Plataforma: ${reservation.platform}`
-    : "Sin reserva vinculada a esta conversación.";
+    ? `Reserva activa: ${reservation.check_in} → ${reservation.check_out}, ${reservation.guests_count} huésped(es), estado ${reservation.status}`
+    : "Sin reserva confirmada vinculada.";
 
   const unitBlock = unit
-    ? `Unidad: ${unit.name} (capacidad ${unit.capacity}, estado ${unit.status})`
-    : reservation
-      ? "Unidad no encontrada en sistema."
-      : "Sin unidad asociada.";
+    ? `Unidad: ${unit.name} (hasta ${unit.capacity} personas)`
+    : "";
 
   const history = recentMessages
     .slice(-AI_RECENT_MESSAGES_LIMIT)
     .map((m) => {
       const who =
-        m.sender === "guest" ? "Huésped" : m.sender === "ai" ? "IA" : "Anfitrión";
+        m.sender === "guest" ? "Huésped" : m.sender === "ai" ? "Equipo" : "Anfitrión";
       return `${who}: ${m.content}`;
     })
     .join("\n");
 
-  return `MENSAJE ACTUAL DEL HUÉSPED (procesar este):
+  const greetingRule = allowGreeting
+    ? "Podés saludar brevemente si suma (es inicio de conversación)."
+    : "NO saludes ni uses 'Hola [nombre]' — respondé directo al punto.";
+
+  return `MENSAJE ACTUAL DEL HUÉSPED (respondé a esto):
 "${input.guestMessage}"
 
-HUÉSPED
-Nombre: ${guestName}
+CANAL: ${input.platform ?? "WhatsApp"} — estilo chat móvil, MUY breve.
+
+HUÉSPED: ${guestName}
+${greetingRule}
+
+DATOS YA CONOCIDOS DEL HUÉSPED (NO volver a preguntar si ya están):
+${formatGuestContextBlock(input.guestContext)}
 
 RESERVA
 ${reservationBlock}
-
-UNIDAD
 ${unitBlock}
 
-PROPIEDAD
+INFO DEL ALOJAMIENTO (usá en primera persona: "tenemos", "podés")
 ${propertyBlock}
 
-BASE DE CONOCIMIENTO (knowledge_base_items)
+BASE DE CONOCIMIENTO
 ${knowledgeBlock}
 
-HISTORIAL RECIENTE DE LA CONVERSACIÓN
-${history || "(sin mensajes previos)"}`;
+HISTORIAL COMPLETO RECIENTE (${recentMessages.length} mensajes — leé todo antes de responder)
+${history || "(primer mensaje)"}`;
 }
