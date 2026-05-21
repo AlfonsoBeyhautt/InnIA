@@ -1,8 +1,13 @@
 import { NextRequest } from "next/server";
+import { after } from "next/server";
 import { jsonError } from "@/lib/api/response";
 import { getWhatsAppVerifyToken } from "@/lib/config/env";
 import { verifyWhatsAppWebhook } from "@/lib/integrations/whatsapp-cloud";
-import { processWhatsAppWebhookPayload } from "@/lib/integrations/inbound-whatsapp";
+import { processWhatsAppWebhookPayload } from "@/lib/integrations/whatsapp/webhook-processor";
+import {
+  logWebhook,
+  safePayloadSummary,
+} from "@/lib/integrations/whatsapp/webhook-debug";
 import { getWhatsAppVerifyTokensFromDb } from "@/lib/db/integrations-webhook";
 
 export async function GET(req: NextRequest) {
@@ -24,15 +29,49 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  let payload: unknown;
   try {
-    const payload = await req.json();
-    const { processed } = await processWhatsAppWebhookPayload(payload);
-    return new Response(JSON.stringify({ ok: true, processed }), {
+    payload = await req.json();
+  } catch (e) {
+    logWebhook("error", "invalid_json_body", {
+      message: e instanceof Error ? e.message : String(e),
+    });
+    return new Response(JSON.stringify({ ok: true, error: "invalid_json" }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (e) {
-    console.error("[whatsapp webhook]", e);
-    return new Response(JSON.stringify({ ok: false }), { status: 200 });
   }
+
+  logWebhook("info", "webhook_post_start", safePayloadSummary(payload));
+
+  const run = async () => {
+    try {
+      const result = await processWhatsAppWebhookPayload(
+        payload as Parameters<typeof processWhatsAppWebhookPayload>[0]
+      );
+      return result;
+    } catch (e) {
+      logWebhook("error", "webhook_processor_crashed", {
+        message: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack?.slice(0, 500) : undefined,
+      });
+      return { processed: 0, skipped: 0, errors: 1, summary: { crashed: true } };
+    }
+  };
+
+  if (typeof after === "function") {
+    after(async () => {
+      await run();
+    });
+    return new Response(JSON.stringify({ ok: true, accepted: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const result = await run();
+  return new Response(JSON.stringify({ ok: true, ...result }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }

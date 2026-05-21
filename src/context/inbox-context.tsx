@@ -130,6 +130,16 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("innia:data-ready", onReady);
   }, [refetch]);
 
+  useEffect(() => {
+    const onFocus = () => void refetch();
+    window.addEventListener("focus", onFocus);
+    const interval = window.setInterval(() => void refetch(), 30_000);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.clearInterval(interval);
+    };
+  }, [refetch]);
+
   const propertyFiltered = useMemo(
     () => filterByProperty(items, selectedProperty),
     [items, selectedProperty]

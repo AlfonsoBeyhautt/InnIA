@@ -43,6 +43,9 @@ export async function PATCH(req: NextRequest) {
       if (provider === "whatsapp_business") {
         const method =
           config.connection_method === "meta" ? "meta" : "manual";
+        if (config.phone_number_id !== undefined) {
+          config.phone_number_id = String(config.phone_number_id).trim();
+        }
         const ok = isWhatsAppConfigComplete({
           phone_number_id: String(config.phone_number_id ?? ""),
           business_account_id: config.business_account_id as string | undefined,
