@@ -61,6 +61,16 @@ export async function PATCH(req: NextRequest) {
         sync_status = ok ? "ready" : "pending_credentials";
         config.connection_method = method;
       }
+      if (provider === "instagram") {
+        const ok = Boolean(
+          config.instagram_business_account_id &&
+            config.page_id &&
+            ((body.access_token as string) || (config.access_token as string))
+        );
+        status = ok ? "connected" : "pending";
+        sync_status = ok ? "ready" : "pending_credentials";
+        config.connection_method = config.connection_method === "meta" ? "meta" : "manual";
+      }
       if (provider === "email") {
         const ok = isEmailConfigComplete({
           ...config,

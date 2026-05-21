@@ -7,6 +7,9 @@ import {
   AI_SYSTEM_PROMPT,
   AI_TEMPERATURE,
 } from "@/lib/ai/config";
+import { getCategoryPromptSuffix } from "@/lib/ai/category-prompts";
+import { applyIntentToConversation } from "@/lib/conversations/apply-intent";
+import type { IntentCategory } from "@/types";
 import {
   detectComplaintSignals,
   detectCommercialProposal,
@@ -20,6 +23,7 @@ import {
 } from "@/lib/integrations/whatsapp/send-outbound";
 import { WhatsAppSendError } from "@/lib/integrations/whatsapp-cloud";
 import { getIntegrations } from "@/lib/db/queries";
+import { getOwnerAiSettings } from "@/lib/ai/owner-settings";
 import {
   getConversationById,
   getGuestById,
@@ -119,9 +123,28 @@ export async function processMessageWithAi(input: {
     }
   }
 
+  const ownerSettings = await getOwnerAiSettings();
+
   const escalationHint = detectEscalationSignals(message.body);
   const complaintHint = detectComplaintSignals(message.body);
   const commercialHint = detectCommercialProposal(message.body);
+
+  let intentCategory = (conversation.intentCategory ?? "otro") as IntentCategory;
+  if (intentCategory === "comercial") {
+    // Reinforce commercial handling server-side
+  }
+
+  if (ownerSettings.ai_auto_classification !== false) {
+    intentCategory = await applyIntentToConversation(input.conversationId, {
+      messageText: message.body,
+      hasReservation: Boolean(conversation.reservationId),
+      channel: conversation.platform.toLowerCase(),
+    });
+  }
+
+  const categorySuffix = getCategoryPromptSuffix(intentCategory);
+  const systemPrompt = `${AI_SYSTEM_PROMPT}\n${categorySuffix}`;
+
   const userPrompt = buildAiUserPrompt({
     guestMessage: message.body,
     guest: guest ? { fullName: guest.fullName } : null,
@@ -143,7 +166,7 @@ export async function processMessageWithAi(input: {
       max_tokens: AI_MAX_TOKENS,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: AI_SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
     });
@@ -194,11 +217,15 @@ export async function processMessageWithAi(input: {
   const integrations = await getIntegrations();
   const waRow = integrations.find((i) => i.provider === "whatsapp_business");
   const waConfig = (waRow?.config as Record<string, unknown>) ?? {};
-  const aiAutoReplyEnabled = waConfig.ai_auto_reply_enabled !== false;
+  const waAutoReply = waConfig.ai_auto_reply_enabled !== false;
+  const aiAutoReplyEnabled =
+    ownerSettings.ai_auto_reply_enabled !== false && waAutoReply;
 
   const decision = parsed.decision;
   const wantsAutoSend =
-    decision === "auto_responder" && Boolean(parsed.generatedResponse.trim());
+    decision === "auto_responder" &&
+    Boolean(parsed.generatedResponse.trim()) &&
+    intentCategory !== "comercial";
   const canDeliverWhatsApp =
     wantsAutoSend && aiAutoReplyEnabled && isWhatsAppChannel(conversation);
 

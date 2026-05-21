@@ -16,13 +16,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WhatsAppIntegrationPanel } from "@/components/settings/whatsapp-integration-panel";
+import { InstagramIntegrationPanel } from "@/components/settings/instagram-integration-panel";
 import type { IntegrationRow } from "@/lib/integrations/whatsapp/types";
 
-const providerMeta: Record<
-  Exclude<IntegrationProvider, "whatsapp_business">,
-  { label: string; desc: string; partnerNote?: string }
-> = {
-  email: { label: "Email", desc: "Envío con Resend" },
+const partnerMeta = {
   airbnb: {
     label: "Airbnb",
     desc: "Sincronización de calendario iCal",
@@ -35,27 +32,29 @@ const providerMeta: Record<
     partnerNote:
       "Booking.com requiere Connectivity API para sincronización completa. Por ahora podés preparar la conexión o usar iCal.",
   },
-};
+} as const;
+
+const partnerProviders = ["airbnb", "booking"] as const;
 
 const EMPTY: IntegrationRow[] = [];
-
-const otherProviders = Object.keys(providerMeta) as Exclude<
-  IntegrationProvider,
-  "whatsapp_business"
->[];
 
 export function IntegrationsPanel() {
   const { toast } = useToast();
   const { data, refetch } = useApi<IntegrationRow[]>("/api/integrations", EMPTY);
   const [syncing, setSyncing] = useState<IntegrationProvider | null>(null);
-  const [configuring, setConfiguring] = useState<IntegrationProvider | null>(null);
+  const [configuring, setConfiguring] = useState<"airbnb" | "booking" | "email" | null>(
+    null
+  );
+  const [emailOpen, setEmailOpen] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const rows = data ?? [];
   const whatsappRow = rows.find((r) => r.provider === "whatsapp_business");
+  const instagramRow = rows.find((r) => r.provider === "instagram");
+  const emailRow = rows.find((r) => r.provider === "email");
 
-  const openConfig = (provider: IntegrationProvider) => {
+  const openConfig = (provider: "airbnb" | "booking" | "email") => {
     const row = rows.find((r) => r.provider === provider);
     const cfg = row?.config ?? {};
     setForm({
@@ -68,7 +67,7 @@ export function IntegrationsPanel() {
   };
 
   const saveConfig = async () => {
-    if (!configuring || configuring === "whatsapp_business") return;
+    if (!configuring) return;
     setSaving(true);
     try {
       const body: Record<string, unknown> = { provider: configuring };
@@ -106,7 +105,7 @@ export function IntegrationsPanel() {
         body: JSON.stringify({ provider, status: "disconnected", sync_status: null }),
       });
       await refetch();
-      toast(`${providerMeta[provider as keyof typeof providerMeta].label} desconectado.`, "info");
+      toast("Integración desconectada.", "info");
     } catch {
       toast("No se pudo desconectar.", "error");
     }
@@ -122,11 +121,11 @@ export function IntegrationsPanel() {
         toast(result.message, "success");
       } else {
         await apiPost("/api/integrations/sync", { provider });
-        toast(`${providerMeta[provider as keyof typeof providerMeta].label} sincronizado.`, "success");
+        toast("Sincronizado.", "success");
       }
       await refetch();
     } catch {
-      toast(`No se pudo sincronizar.`, "error");
+      toast("No se pudo sincronizar.", "error");
     } finally {
       setSyncing(null);
     }
@@ -144,91 +143,114 @@ export function IntegrationsPanel() {
   };
 
   return (
-    <>
-      <WhatsAppIntegrationPanel row={whatsappRow} onRefetch={refetch} />
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Canales principales
+        </p>
+        <div className="mt-3 space-y-4">
+          <WhatsAppIntegrationPanel row={whatsappRow} onRefetch={refetch} />
+          <InstagramIntegrationPanel row={instagramRow} onRefetch={refetch} />
+        </div>
+      </div>
 
-      <ul className="space-y-3">
-        {otherProviders.map((provider) => {
-          const row = rows.find((r) => r.provider === provider);
-          const meta = providerMeta[provider];
-          const connected = row?.status === "connected" || row?.status === "pending";
-          const isPartner = provider === "airbnb" || provider === "booking";
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Plataformas de reserva
+        </p>
+        <ul className="mt-3 space-y-3">
+          {partnerProviders.map((provider) => {
+            const row = rows.find((r) => r.provider === provider);
+            const meta = partnerMeta[provider];
+            const connected = row?.status === "connected" || row?.status === "pending";
 
-          return (
-            <li
-              key={provider}
-              className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border/70 bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-start gap-3 min-w-0 flex-1">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                  <MessageCircle className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium">{meta.label}</p>
-                  <p className="text-xs text-muted-foreground">{meta.desc}</p>
-                  {meta.partnerNote && (
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-amber-900/90 bg-amber-50 rounded-lg px-2 py-1.5 border border-amber-100">
+            return (
+              <li
+                key={provider}
+                className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border/70 bg-white p-4 shadow-sm"
+              >
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <MessageCircle className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium">{meta.label}</p>
+                    <p className="text-xs text-muted-foreground">{meta.desc}</p>
+                    <p className="mt-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2 py-1.5 text-[11px] leading-relaxed text-amber-900/90">
                       {meta.partnerNote}
                     </p>
-                  )}
-                  {isPartner && connected && (
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      Mensajes requieren integración avanzada
-                    </p>
-                  )}
-                  {row?.last_sync_at && (
-                    <p className="mt-0.5 text-[10px] text-slate-400">
-                      Último sync: {new Date(row.last_sync_at).toLocaleString("es-UY")}
-                    </p>
-                  )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  variant={
-                    connected && row?.status !== "pending" ? "success" : "warning"
-                  }
-                  className="gap-1"
-                >
-                  {connected && row?.status !== "pending" ? (
-                    <CheckCircle2 className="h-3 w-3" />
-                  ) : (
-                    <XCircle className="h-3 w-3" />
-                  )}
-                  {statusLabel(row)}
-                </Badge>
-                <Button variant="outline" size="sm" onClick={() => openConfig(provider)}>
-                  Configurar
-                </Button>
-                {connected && (
-                  <Button variant="ghost" size="sm" onClick={() => disconnect(provider)}>
-                    Desconectar
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={connected ? "success" : "warning"} className="gap-1">
+                    {connected ? (
+                      <CheckCircle2 className="h-3 w-3" />
+                    ) : (
+                      <XCircle className="h-3 w-3" />
+                    )}
+                    {statusLabel(row)}
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={() => openConfig(provider)}>
+                    Configurar
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  disabled={syncing === provider}
-                  onClick={() => sync(provider)}
-                >
-                  {syncing === provider ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : isPartner ? (
-                    "Sincronizar calendario"
-                  ) : (
-                    "Sincronizar"
+                  {connected && (
+                    <Button variant="ghost" size="sm" onClick={() => disconnect(provider)}>
+                      Desconectar
+                    </Button>
                   )}
-                </Button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                  <Button
+                    size="sm"
+                    disabled={syncing === provider}
+                    onClick={() => sync(provider)}
+                  >
+                    {syncing === provider ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Sincronizar calendario"
+                    )}
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div>
+        <button
+          type="button"
+          onClick={() => setEmailOpen((o) => !o)}
+          className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+        >
+          Otros canales {emailOpen ? "▾" : "▸"} — Email (secundario)
+        </button>
+        {emailOpen && (
+          <li className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-dashed border-border/70 bg-muted/20 p-4 list-none">
+            <div>
+              <p className="font-medium text-sm">Email</p>
+              <p className="text-xs text-muted-foreground">Resend · no prioritario en Centro de mensajes</p>
+            </div>
+            <div className="flex gap-2">
+              <Badge variant={emailRow?.status === "connected" ? "success" : "secondary"}>
+                {statusLabel(emailRow)}
+              </Badge>
+              <Button variant="outline" size="sm" onClick={() => openConfig("email")}>
+                Configurar
+              </Button>
+            </div>
+          </li>
+        )}
+      </div>
 
       <Dialog open={!!configuring} onOpenChange={(o) => !o && setConfiguring(null)}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {configuring ? providerMeta[configuring as keyof typeof providerMeta].label : "Integración"}
+              {configuring === "email"
+                ? "Email"
+                : configuring
+                  ? partnerMeta[configuring].label
+                  : "Integración"}
             </DialogTitle>
           </DialogHeader>
           {configuring === "email" && (
@@ -252,19 +274,17 @@ export function IntegrationsPanel() {
             </div>
           )}
           {(configuring === "airbnb" || configuring === "booking") && (
-            <div className="space-y-2">
-              <Input
-                placeholder="Enlace iCal"
-                value={form.ical_url}
-                onChange={(e) => setForm((f) => ({ ...f, ical_url: e.target.value }))}
-              />
-            </div>
+            <Input
+              placeholder="Enlace iCal"
+              value={form.ical_url}
+              onChange={(e) => setForm((f) => ({ ...f, ical_url: e.target.value }))}
+            />
           )}
-          <Button className="w-full mt-4" onClick={() => void saveConfig()} disabled={saving}>
+          <Button className="mt-4 w-full" onClick={() => void saveConfig()} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar"}
           </Button>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

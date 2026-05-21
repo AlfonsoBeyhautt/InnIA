@@ -6,7 +6,10 @@ import Link from "next/link";
 import { ArrowLeft, Bot, CheckCircle2, ClipboardList, Send, User } from "lucide-react";
 import { useInbox } from "@/context/inbox-context";
 import { useToast } from "@/context/toast-context";
-import { propertyName } from "@/lib/utils";
+import { useProperty } from "@/context/property-context";
+import { INTENT_CATEGORY_LABELS } from "@/lib/conversations/intent-classifier";
+import { IntentCategoryBadge } from "@/components/inbox/intent-category-badge";
+import type { IntentCategory } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PlatformBadge } from "@/components/inbox/platform-badge";
@@ -22,7 +25,9 @@ export function MessageThread() {
     setMobileShowList,
     markResolved,
     createTaskFromConversation,
+    reclassifyIntent,
   } = useInbox();
+  const { resolvePropertyName } = useProperty();
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -75,7 +80,32 @@ export function MessageThread() {
             <h2 className="truncate font-semibold text-foreground">{selected.guestName}</h2>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <PlatformBadge platform={selected.platform} />
-              <span>{propertyName(selected.propertyId)}</span>
+              <IntentCategoryBadge category={selected.intentCategory} />
+              <span>{resolvePropertyName(selected.propertyId)}</span>
+              {selected.reservationId && (
+                <Badge variant="outline" className="text-[9px]">
+                  Reserva activa
+                </Badge>
+              )}
+              <select
+                className="h-6 rounded border border-border/80 bg-white px-1 text-[10px] text-muted-foreground"
+                value={selected.intentCategory}
+                onChange={(e) =>
+                  void reclassifyIntent(
+                    selected.id,
+                    e.target.value as IntentCategory
+                  )
+                }
+                title="Reclasificar conversación"
+              >
+                {(Object.keys(INTENT_CATEGORY_LABELS) as IntentCategory[]).map(
+                  (key) => (
+                    <option key={key} value={key}>
+                      {INTENT_CATEGORY_LABELS[key]}
+                    </option>
+                  )
+                )}
+              </select>
               {selected.labels.slice(0, 2).map((label) => (
                 <Badge key={label} variant="secondary" className="text-[9px]">
                   {label}

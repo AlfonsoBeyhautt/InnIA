@@ -175,7 +175,7 @@ export async function getConversations(): Promise<Conversation[]> {
   const { supabase, userId } = await authDb();
   const { data, error } = await supabase
     .from("conversations")
-    .select("*, guest:guests(full_name), property:properties(slug)")
+    .select("*, guest:guests(full_name), property:properties(slug, name)")
     .eq("owner_id", userId)
     .order("last_message_at", { ascending: false, nullsFirst: false });
 
@@ -184,7 +184,7 @@ export async function getConversations(): Promise<Conversation[]> {
   const result: Conversation[] = [];
   type ConvRow = Tables<"conversations"> & {
     guest?: { full_name: string } | null;
-    property?: { slug: string } | null;
+    property?: { slug: string; name?: string } | null;
   };
   for (const row of (data ?? []) as ConvRow[]) {
     const messages = await getMessages(row.id);
@@ -202,7 +202,7 @@ export async function getConversationById(id: string): Promise<Conversation | nu
   const { supabase, userId } = await authDb();
   const { data, error } = await supabase
     .from("conversations")
-    .select("*, guest:guests(full_name), property:properties(slug)")
+    .select("*, guest:guests(full_name), property:properties(slug, name)")
     .eq("id", id)
     .eq("owner_id", userId)
     .maybeSingle();

@@ -25,7 +25,14 @@ export type IntegrationProvider =
   | "airbnb"
   | "booking"
   | "whatsapp_business"
+  | "instagram"
   | "email";
+
+export type IntentCategory =
+  | "nueva_consulta"
+  | "huesped_activo"
+  | "comercial"
+  | "otro";
 
 export type AiDecision =
   | "auto_responder"
@@ -45,6 +52,7 @@ export interface Database {
           phone: string | null;
           plan: string;
           onboarding_completed: boolean;
+          ai_settings: Json;
           created_at: string;
           updated_at: string;
         };
@@ -56,6 +64,7 @@ export interface Database {
           phone?: string | null;
           plan?: string;
           onboarding_completed?: boolean;
+          ai_settings?: Json;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];
@@ -245,6 +254,8 @@ export interface Database {
           status: string;
           priority: string;
           ai_status: string | null;
+          intent_category: string;
+          intent_manual_override: boolean;
           labels: string[];
           sentiment: string | null;
           last_message_preview: string | null;
@@ -263,6 +274,8 @@ export interface Database {
           status?: string;
           priority?: string;
           ai_status?: string | null;
+          intent_category?: string;
+          intent_manual_override?: boolean;
           labels?: string[];
           sentiment?: string | null;
           last_message_preview?: string | null;
@@ -299,6 +312,40 @@ export interface Database {
           status?: string;
         };
         Update: Partial<Database["public"]["Tables"]["messages"]["Insert"]>;
+        Relationships: [];
+      };
+      ad_campaigns: {
+        Row: {
+          id: string;
+          owner_id: string;
+          property_id: string | null;
+          name: string;
+          objective: string;
+          budget: number | null;
+          start_date: string | null;
+          end_date: string | null;
+          channel: string;
+          ad_copy: string | null;
+          cta: string | null;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          property_id?: string | null;
+          name: string;
+          objective: string;
+          budget?: number | null;
+          start_date?: string | null;
+          end_date?: string | null;
+          channel?: string;
+          ad_copy?: string | null;
+          cta?: string | null;
+          status?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["ad_campaigns"]["Insert"]>;
         Relationships: [];
       };
       integrations: {

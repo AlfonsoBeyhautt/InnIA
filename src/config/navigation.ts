@@ -6,6 +6,7 @@ import {
   Home,
   Inbox,
   KeyRound,
+  Megaphone,
   Settings,
   SprayCan,
   Users,
@@ -28,6 +29,7 @@ export const navigation: NavItem[] = [
   { title: "Cerraduras", href: "/app/cerraduras", icon: KeyRound },
   { title: "Base de datos", href: "/app/crm", icon: Users },
   { title: "Finanzas", href: "/app/finanzas", icon: CreditCard },
+  { title: "Publicidad", href: "/app/publicidad", icon: Megaphone },
   { title: "Reportes", href: "/app/reportes", icon: BarChart3 },
   { title: "Configuración", href: "/app/configuracion", icon: Settings },
 ];

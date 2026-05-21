@@ -15,22 +15,36 @@ import { useToast } from "@/context/toast-context";
 import { DEMO_PROPERTY_IDS } from "@/lib/demo/constants";
 import { filterByProperty } from "@/lib/utils";
 import { useProperty } from "@/context/property-context";
-import type { Conversation, Urgency } from "@/types";
+import type {
+  Conversation,
+  InboxIntentTab,
+  IntentCategory,
+  Platform,
+  Urgency,
+} from "@/types";
 import type { AiAnalysis, AiResponseStatus } from "@/types/inbox-ai";
 import { labelFromAiStatus } from "@/types/inbox-ai";
 
 export type InboxFilter = "all" | "unread" | "review";
 
+type IntentCounts = Record<InboxIntentTab, number>;
+
 type InboxContextValue = {
   conversations: Conversation[];
+  intentCounts: IntentCounts;
   loading: boolean;
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
   selected: Conversation | null;
+  intentTab: InboxIntentTab;
+  setIntentTab: (tab: InboxIntentTab) => void;
+  channelFilter: Platform | "all";
+  setChannelFilter: (p: Platform | "all") => void;
   filter: InboxFilter;
   setFilter: (f: InboxFilter) => void;
   search: string;
   setSearch: (s: string) => void;
+  reclassifyIntent: (conversationId: string, category: IntentCategory) => Promise<void>;
   aiPanelOpen: boolean;
   setAiPanelOpen: (v: boolean) => void;
   aiPanelExpanded: boolean;
@@ -99,6 +113,8 @@ export function InboxProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [analyses, setAnalyses] = useState<Record<string, AiAnalysis>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [intentTab, setIntentTab] = useState<InboxIntentTab>("nueva_consulta");
+  const [channelFilter, setChannelFilter] = useState<Platform | "all">("all");
   const [filter, setFilter] = useState<InboxFilter>("all");
   const [search, setSearch] = useState("");
   const [aiPanelOpen, setAiPanelOpen] = useState(true);
@@ -147,15 +163,36 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     [items, selectedProperty]
   );
 
+  const searchFiltered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return propertyFiltered;
+    return propertyFiltered.filter(
+      (c) =>
+        c.guestName.toLowerCase().includes(q) ||
+        c.lastMessage.toLowerCase().includes(q) ||
+        (c.propertyName ?? "").toLowerCase().includes(q)
+    );
+  }, [propertyFiltered, search]);
+
+  const intentCounts = useMemo((): IntentCounts => {
+    const counts: IntentCounts = {
+      nueva_consulta: 0,
+      huesped_activo: 0,
+      comercial: 0,
+      todos: searchFiltered.length,
+    };
+    for (const c of searchFiltered) {
+      if (c.intentCategory === "nueva_consulta") counts.nueva_consulta++;
+      else if (c.intentCategory === "huesped_activo") counts.huesped_activo++;
+      else if (c.intentCategory === "comercial") counts.comercial++;
+    }
+    return counts;
+  }, [searchFiltered]);
+
   const conversations = useMemo(() => {
-    return propertyFiltered.filter((c) => {
-      const q = search.toLowerCase().trim();
-      if (q) {
-        const match =
-          c.guestName.toLowerCase().includes(q) ||
-          c.lastMessage.toLowerCase().includes(q);
-        if (!match) return false;
-      }
+    return searchFiltered.filter((c) => {
+      if (intentTab !== "todos" && c.intentCategory !== intentTab) return false;
+      if (channelFilter !== "all" && c.platform !== channelFilter) return false;
       if (filter === "unread") return c.unread;
       if (filter === "review")
         return (
@@ -166,7 +203,7 @@ export function InboxProvider({ children }: { children: ReactNode }) {
         );
       return true;
     });
-  }, [propertyFiltered, search, filter, analyses]);
+  }, [searchFiltered, intentTab, channelFilter, filter, analyses]);
 
   const selected = useMemo(
     () => conversations.find((c) => c.id === selectedId) ?? conversations[0] ?? null,
@@ -406,6 +443,30 @@ export function InboxProvider({ children }: { children: ReactNode }) {
     [items]
   );
 
+  const reclassifyIntent = useCallback(
+    async (conversationId: string, category: IntentCategory) => {
+      try {
+        const res = await fetch(`/api/conversations/${conversationId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            intent_category: category,
+            intent_manual_override: true,
+          }),
+        });
+        if (!res.ok) throw new Error("No se pudo reclasificar");
+        const updated = (await res.json()) as Conversation;
+        setItems((prev) =>
+          prev.map((c) => (c.id === conversationId ? { ...c, ...updated } : c))
+        );
+        toast("Categoría actualizada.", "success");
+      } catch {
+        toast("No se pudo actualizar la categoría.", "error");
+      }
+    },
+    [toast]
+  );
+
   const handleSelect = useCallback(
     (id: string | null) => {
       setSelectedId(id);
@@ -419,14 +480,20 @@ export function InboxProvider({ children }: { children: ReactNode }) {
 
   const value: InboxContextValue = {
     conversations,
+    intentCounts,
     loading,
     selectedId: selected?.id ?? null,
     setSelectedId: handleSelect,
     selected,
+    intentTab,
+    setIntentTab,
+    channelFilter,
+    setChannelFilter,
     filter,
     setFilter,
     search,
     setSearch,
+    reclassifyIntent,
     aiPanelOpen,
     setAiPanelOpen,
     aiPanelExpanded,

@@ -2,6 +2,7 @@ import type { Tables } from "@/lib/supabase/types";
 import type {
   Conversation,
   ConversationLabel,
+  IntentCategory,
   Guest,
   GuestIncident,
   GuestReservationHistory,
@@ -26,7 +27,7 @@ type DbReservation = Tables<"reservations"> & {
 };
 type DbConversation = Tables<"conversations"> & {
   guest?: { full_name: string } | null;
-  property?: { slug: string } | null;
+  property?: { slug: string; name?: string } | null;
 };
 type DbMessage = Tables<"messages">;
 type DbTask = Tables<"operation_tasks">;
@@ -38,6 +39,7 @@ const platformMap: Record<string, Platform> = {
   booking: "Booking",
   whatsapp: "WhatsApp",
   whatsapp_business: "WhatsApp",
+  instagram: "Instagram",
   email: "Email",
   directa: "Directa",
 };
@@ -46,7 +48,9 @@ export function toPlatform(value: string | null | undefined): Platform {
   if (!value) return "Directa";
   const key = value.toLowerCase();
   if (platformMap[key]) return platformMap[key];
-  const found = (["Airbnb", "Booking", "WhatsApp", "Email", "Directa"] as Platform[]).find(
+  const found = (
+    ["Airbnb", "Booking", "WhatsApp", "Instagram", "Email", "Directa"] as Platform[]
+  ).find(
     (p) => p.toLowerCase() === key
   );
   return found ?? "Directa";
@@ -192,6 +196,9 @@ export function mapConversation(
     propertyId: propertySlug,
     propertyDbId: row.property_id,
     platform: toPlatform(row.channel),
+    propertyName: row.property?.name ?? undefined,
+    intentCategory: (row.intent_category as IntentCategory) ?? "otro",
+    intentManualOverride: row.intent_manual_override ?? false,
     lastMessage: row.last_message_preview ?? last?.content ?? "",
     lastMessageAt: row.last_message_at
       ? formatMessageTime(row.last_message_at)

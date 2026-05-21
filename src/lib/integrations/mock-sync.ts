@@ -8,6 +8,7 @@ export function getMockReservationsForProvider(provider: IntegrationProvider) {
     airbnb: ["Airbnb"],
     booking: ["Booking"],
     whatsapp_business: ["WhatsApp"],
+    instagram: ["Instagram"],
     email: ["Email"],
   };
   const platforms = platformMap[provider] ?? [];
@@ -19,6 +20,7 @@ export function getMockMessagesForProvider(provider: IntegrationProvider) {
     airbnb: ["Airbnb"],
     booking: ["Booking"],
     whatsapp_business: ["WhatsApp"],
+    instagram: ["Instagram"],
     email: ["Email"],
   };
   const channels = channelMap[provider] ?? [];

@@ -6,6 +6,7 @@ import {
   safePayloadSummary,
 } from "@/lib/integrations/whatsapp/webhook-debug";
 import { resolveWhatsAppIntegration } from "@/lib/integrations/whatsapp/resolve-integration";
+import { applyIntentToConversation } from "@/lib/conversations/apply-intent";
 
 /** DB channel value — mapped to platform "WhatsApp" in UI */
 export const WHATSAPP_CHANNEL = "whatsapp";
@@ -259,6 +260,30 @@ async function processInboundMessage(
 
     if (notifErr) {
       logWebhook("warn", "notification_insert_failed", { message: notifErr.message });
+    }
+
+    const { data: convMeta } = await admin
+      .from("conversations")
+      .select("reservation_id")
+      .eq("id", conversationId)
+      .maybeSingle();
+
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("ai_settings")
+      .eq("id", integration.owner_id)
+      .maybeSingle();
+    const aiSettings = (profile?.ai_settings as { ai_auto_classification?: boolean }) ?? {};
+    if (aiSettings.ai_auto_classification !== false) {
+      await applyIntentToConversation(
+        conversationId,
+        {
+          messageText: body,
+          hasReservation: Boolean(convMeta?.reservation_id),
+          channel: WHATSAPP_CHANNEL,
+        },
+        admin
+      );
     }
 
     logWebhook("info", "message_saved", {

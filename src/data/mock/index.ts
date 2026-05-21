@@ -226,12 +226,14 @@ const baseMessages = (convId: string): Conversation["messages"] => [
 export const conversations: Conversation[] = [
   {
     id: "c1", guestId: "g1", guestName: "Martín y familia", propertyId: "pdd", platform: "Airbnb",
+    intentCategory: "huesped_activo",
     lastMessage: "¿Hay estacionamiento cerca?", lastMessageAt: "10:45", unread: true, urgency: "revisar",
     labels: ["Requiere revisión", "Check-in hoy"], sentiment: "positivo", reservationId: "r1",
     messages: baseMessages("c1"),
   },
   {
     id: "c2", guestId: "g2", guestName: "Lucía Fernández", propertyId: "paloma", platform: "Booking",
+    intentCategory: "huesped_activo",
     lastMessage: "La cerradura no abre con el código", lastMessageAt: "09:12", unread: true, urgency: "urgente",
     labels: ["Urgente", "Problema mantenimiento"], sentiment: "negativo", reservationId: "r2",
     messages: [
@@ -241,6 +243,7 @@ export const conversations: Conversation[] = [
   },
   {
     id: "c3", guestId: "g3", guestName: "Diego y Ana", propertyId: "rocha", platform: "WhatsApp",
+    intentCategory: "huesped_activo",
     lastMessage: "Gracias por la info del parrillero", lastMessageAt: "Ayer", unread: false, urgency: "normal",
     labels: ["Respondido por IA"], sentiment: "positivo", reservationId: "r3",
     messages: [
@@ -251,6 +254,7 @@ export const conversations: Conversation[] = [
   },
   {
     id: "c4", guestId: "g5", guestName: "Juan Pérez", propertyId: "pdd", platform: "Email",
+    intentCategory: "otro",
     lastMessage: "Consulta sobre factura", lastMessageAt: "08:30", unread: true, urgency: "revisar",
     labels: ["Requiere revisión"], sentiment: "neutral", reservationId: "r4",
     messages: [
@@ -259,6 +263,7 @@ export const conversations: Conversation[] = [
   },
   {
     id: "c5", guestId: "g4", guestName: "Carla P.", propertyId: "rocha", platform: "Airbnb",
+    intentCategory: "nueva_consulta",
     lastMessage: "¿Puedo traer mascota pequeña?", lastMessageAt: "07:15", unread: true, urgency: "revisar",
     labels: ["Requiere revisión"], sentiment: "neutral", reservationId: "r5",
     messages: [

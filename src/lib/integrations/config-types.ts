@@ -33,8 +33,17 @@ export type ICalIntegrationConfig = {
   last_import_count?: number;
 };
 
+export type InstagramIntegrationConfig = {
+  instagram_business_account_id?: string;
+  page_id?: string;
+  access_token?: string;
+  connection_method?: "meta" | "manual";
+  ai_auto_reply_enabled?: boolean;
+};
+
 export type IntegrationConfigMap = {
   whatsapp_business: WhatsAppIntegrationConfig;
+  instagram: InstagramIntegrationConfig;
   email: EmailIntegrationConfig;
   airbnb: ICalIntegrationConfig;
   booking: ICalIntegrationConfig;

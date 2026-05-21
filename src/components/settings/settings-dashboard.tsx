@@ -5,6 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { useApi } from "@/lib/hooks/use-api";
 import { useSession } from "@/lib/hooks/use-session";
 import type { AppStats } from "@/lib/db/app-stats";
+import type { OwnerAiSettings } from "@/lib/ai/owner-settings";
+import { AddPropertyDialog } from "@/components/properties/add-property-dialog";
+import { useToast } from "@/context/toast-context";
 import {
   BedDouble,
   Bot,
@@ -59,17 +62,40 @@ function Toggle({ on }: { on: boolean; label: string }) {
 }
 
 function SettingsDashboardInner() {
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const { user } = useSession();
   const { data: stats } = useApi<AppStats>(user ? "/api/stats" : null);
+  const { data: aiSettings, refetch: refetchAi } = useApi<OwnerAiSettings>(
+    user ? "/api/settings/ai" : null,
+    { ai_auto_classification: true, ai_auto_reply_enabled: true }
+  );
   const [active, setActive] = useState<SectionId>("integraciones");
+  const [addPropertyOpen, setAddPropertyOpen] = useState(false);
+  const [savingAi, setSavingAi] = useState(false);
 
   useEffect(() => {
     const section = searchParams.get("section");
     if (section === "integraciones") setActive("integraciones");
   }, [searchParams]);
-  const [autoReply, setAutoReply] = useState(true);
-  const [nightMode, setNightMode] = useState(false);
+
+  const patchAiSettings = async (patch: Partial<OwnerAiSettings>) => {
+    setSavingAi(true);
+    try {
+      const res = await fetch("/api/settings/ai", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error();
+      await refetchAi();
+      toast("Preferencias de IA guardadas.", "success");
+    } catch {
+      toast("No se pudieron guardar las preferencias.", "error");
+    } finally {
+      setSavingAi(false);
+    }
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] overflow-hidden rounded-[22px] border border-border/80 bg-card shadow-[0_4px_24px_-8px_rgba(62,79,60,0.1)]">
@@ -130,20 +156,46 @@ function SettingsDashboardInner() {
                     La IA responde consultas frecuentes sin intervención
                   </p>
                 </div>
-                <button type="button" onClick={() => setAutoReply((v) => !v)}>
-                  <Toggle on={autoReply} label="Auto" />
+                <button
+                  type="button"
+                  disabled={savingAi}
+                  onClick={() =>
+                    void patchAiSettings({
+                      ai_auto_reply_enabled: !aiSettings?.ai_auto_reply_enabled,
+                    })
+                  }
+                >
+                  <Toggle on={aiSettings?.ai_auto_reply_enabled !== false} label="Auto" />
                 </button>
               </div>
               <Separator />
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-medium">Modo nocturno IA</p>
-                  <p className="text-xs text-muted-foreground">Solo sugerencias, sin envío automático</p>
+                  <p className="font-medium">Clasificación automática</p>
+                  <p className="text-xs text-muted-foreground">
+                    Organiza conversaciones por intención (consultas, huéspedes, comercial)
+                  </p>
                 </div>
-                <button type="button" onClick={() => setNightMode((v) => !v)}>
-                  <Toggle on={nightMode} label="Night" />
+                <button
+                  type="button"
+                  disabled={savingAi}
+                  onClick={() =>
+                    void patchAiSettings({
+                      ai_auto_classification: !(
+                        aiSettings?.ai_auto_classification !== false
+                      ),
+                    })
+                  }
+                >
+                  <Toggle
+                    on={aiSettings?.ai_auto_classification !== false}
+                    label="Classify"
+                  />
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Reclasificación manual disponible en cada conversación del Centro de mensajes.
+              </p>
               <Button variant="outline" size="sm">
                 Actualizar base de conocimiento
               </Button>
@@ -159,7 +211,8 @@ function SettingsDashboardInner() {
             <p className="text-sm text-muted-foreground">
               {stats?.propertyCount ?? 0} propiedades · {stats?.unitCount ?? 0} unidades configuradas
             </p>
-            <Button>Agregar propiedad</Button>
+            <Button onClick={() => setAddPropertyOpen(true)}>Agregar propiedad</Button>
+            <AddPropertyDialog open={addPropertyOpen} onOpenChange={setAddPropertyOpen} />
           </div>
         )}
 

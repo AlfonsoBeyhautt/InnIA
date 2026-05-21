@@ -473,6 +473,8 @@ export async function updateConversation(
     labels?: string[];
     unread?: boolean;
     status?: string;
+    intent_category?: string;
+    intent_manual_override?: boolean;
   }
 ) {
   const { supabase, userId } = await authDb();

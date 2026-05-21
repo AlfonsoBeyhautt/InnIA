@@ -1,7 +1,25 @@
 /** Slug in Supabase (`pdd`, `rocha`, `paloma`) or `all` for filters */
 export type PropertyId = "all" | "pdd" | "rocha" | "paloma" | (string & {});
 
-export type Platform = "Airbnb" | "Booking" | "WhatsApp" | "Email" | "Directa";
+export type Platform =
+  | "Airbnb"
+  | "Booking"
+  | "WhatsApp"
+  | "Instagram"
+  | "Email"
+  | "Directa";
+
+export type IntentCategory =
+  | "nueva_consulta"
+  | "huesped_activo"
+  | "comercial"
+  | "otro";
+
+export type InboxIntentTab =
+  | "nueva_consulta"
+  | "huesped_activo"
+  | "comercial"
+  | "todos";
 
 export type Urgency = "normal" | "revisar" | "urgente";
 
@@ -153,7 +171,10 @@ export interface Conversation {
   guestAvatar?: string;
   propertyId: PropertyId;
   propertyDbId?: string;
+  propertyName?: string;
   platform: Platform;
+  intentCategory: IntentCategory;
+  intentManualOverride?: boolean;
   aiStatus?: string;
   lastMessage: string;
   lastMessageAt: string;
@@ -163,6 +184,24 @@ export interface Conversation {
   messages: Message[];
   sentiment?: "positivo" | "neutral" | "negativo";
   reservationId?: string;
+}
+
+export type AdCampaignStatus = "borrador" | "listo_para_publicar";
+
+export interface AdCampaign {
+  id: string;
+  propertyId?: string;
+  propertyName?: string;
+  name: string;
+  objective: string;
+  budget?: number;
+  startDate?: string;
+  endDate?: string;
+  channel: "instagram" | "facebook" | "both";
+  adCopy?: string;
+  cta?: string;
+  status: AdCampaignStatus;
+  createdAt: string;
 }
 
 export interface OperationTask {

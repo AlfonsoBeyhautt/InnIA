@@ -1,8 +1,7 @@
 "use client";
 
-import { Building2, Check, ChevronDown } from "lucide-react";
+import { Building2, Check, ChevronDown, Loader2 } from "lucide-react";
 import { useProperty } from "@/context/property-context";
-import { PROPERTY_OPTIONS } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,31 +14,56 @@ import {
 import type { PropertyId } from "@/types";
 
 export function PropertySwitcher() {
-  const { selectedProperty, setSelectedProperty } = useProperty();
-  const current = PROPERTY_OPTIONS.find((p) => p.id === selectedProperty);
+  const {
+    selectedProperty,
+    setSelectedProperty,
+    properties,
+    loading,
+    resolvePropertyName,
+  } = useProperty();
+
+  const options = [
+    { id: "all" as PropertyId, name: "Todas las propiedades" },
+    ...properties,
+  ];
+  const current = options.find((p) => p.id === selectedProperty);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="h-9 gap-2 rounded-xl border-border/80 bg-card font-normal shadow-sm">
+        <Button
+          variant="outline"
+          className="h-9 gap-2 rounded-xl border-border/80 bg-card font-normal shadow-sm"
+        >
           <Building2 className="h-4 w-4 text-olive" />
-          <span className="max-w-[180px] truncate hidden sm:inline">{current?.name}</span>
+          <span className="max-w-[180px] truncate hidden sm:inline">
+            {loading && properties.length === 0 ? (
+              <Loader2 className="inline h-3.5 w-3.5 animate-spin" />
+            ) : (
+              current?.name ?? resolvePropertyName(selectedProperty)
+            )}
+          </span>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
+      <DropdownMenuContent align="start" className="w-64 max-h-[320px] overflow-y-auto">
         <DropdownMenuLabel>Propiedades</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {PROPERTY_OPTIONS.map((p) => (
+        {options.map((p) => (
           <DropdownMenuItem
             key={p.id}
-            onClick={() => setSelectedProperty(p.id as PropertyId)}
+            onClick={() => setSelectedProperty(p.id)}
             className="justify-between"
           >
-            {p.name}
-            {selectedProperty === p.id && <Check className="h-4 w-4 text-primary" />}
+            <span className="truncate">{p.name}</span>
+            {selectedProperty === p.id && <Check className="h-4 w-4 shrink-0 text-primary" />}
           </DropdownMenuItem>
         ))}
+        {!loading && properties.length === 0 && (
+          <p className="px-2 py-2 text-xs text-muted-foreground">
+            Sin propiedades. Agregá una desde Configuración o Propiedades.
+          </p>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -34,7 +34,9 @@ export const platformColors: Record<string, string> = {
   Airbnb: "bg-[#9B2335]/10 text-[#7A1C2A] border-[#9B2335]/25",
   Booking: "bg-[#1E4A8C]/10 text-[#1E4A8C] border-[#1E4A8C]/25",
   WhatsApp: "bg-[#1A6B5C]/10 text-[#1A6B5C] border-[#1A6B5C]/25",
-  Email: "bg-slate-100 text-slate-700 border-slate-200",
+  Instagram:
+    "bg-gradient-to-r from-[#F58529]/10 via-[#DD2A7B]/10 to-[#8134AF]/10 text-[#8134AF] border-[#DD2A7B]/25",
+  Email: "bg-slate-100 text-slate-600 border-slate-200",
   Directa: "bg-[#1F5C45]/10 text-[#1F5C45] border-[#1F5C45]/25",
 };
 
@@ -42,7 +44,8 @@ export const platformBlockStyles: Record<string, string> = {
   Airbnb: "bg-[#9B2335] border-[#7A1C2A] text-white",
   Booking: "bg-[#1E4A8C] border-[#163A6E] text-white",
   WhatsApp: "bg-[#1A6B5C] border-[#145548] text-white",
-  Email: "bg-slate-600 border-slate-700 text-white",
+  Instagram: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] border-[#DD2A7B] text-white",
+  Email: "bg-slate-500 border-slate-600 text-white",
   Directa: "bg-[#1F5C45] border-[#184A38] text-white",
 };
 
