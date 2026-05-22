@@ -1,7 +1,7 @@
 import type { Reservation } from "@/types";
 
 export const DAY_WIDTH = 52;
-export const ROW_HEIGHT = 44;
+export const ROW_HEIGHT = 56;
 export const UNIT_COL_WIDTH = 200;
 
 export function parseDate(iso: string): Date {

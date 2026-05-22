@@ -106,15 +106,17 @@ export default function ReservasPage() {
     [properties, selectedProperty]
   );
 
-  const calendarEmptyOverlay = (
+  const calendarEmptyBanner = (
     <>
-      <p className="text-sm font-medium text-foreground">
-        No hay reservas cargadas para este período.
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        El calendario sigue disponible para navegar fechas y unidades.
-      </p>
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <p className="text-sm font-medium text-foreground">
+          No hay reservas cargadas para este período.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          El calendario sigue disponible para navegar fechas y unidades.
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">
         <Button asChild size="sm" className="rounded-xl">
           <Link href="/app/reservas">Crear reserva</Link>
         </Button>
@@ -223,7 +225,7 @@ export default function ReservasPage() {
       </div>
 
       <div className="relative flex min-h-0 flex-1">
-        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden p-2 max-lg:p-2 lg:p-3 xl:p-4">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2 max-lg:p-2 lg:p-3 xl:p-4">
           <PmsTimelineCalendar
             reservations={filtered}
             propertyFilter={selectedProperty}
@@ -231,7 +233,7 @@ export default function ReservasPage() {
             rangeStart={rangeStart}
             selectedReservationId={selectedReservationId}
             placeholderUnits={placeholderUnits}
-            emptyOverlay={filtered.length === 0 ? calendarEmptyOverlay : undefined}
+            emptyBanner={filtered.length === 0 ? calendarEmptyBanner : undefined}
             onSelectReservation={(id) => {
               setSelectedReservationId(id);
               setDetailOpen(true);
