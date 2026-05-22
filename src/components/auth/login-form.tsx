@@ -29,9 +29,11 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(
-    urlError === "auth_callback" ? "No se pudo completar la autenticación." : null
-  );
+  const [error, setError] = useState<string | null>(() => {
+    if (urlError === "auth_callback") return "No se pudo completar la autenticación.";
+    if (urlError === "supabase") return "El servidor no está configurado. Contactá al administrador.";
+    return null;
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

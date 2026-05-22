@@ -8,20 +8,26 @@ type ProfileResponse = {
   user: { email: string | null } | null;
 };
 
-function firstName(profile: ProfileResponse | null, email?: string | null) {
+function firstName(profile: ProfileResponse | null, email?: string | null): string | null {
   const full = profile?.profile?.full_name?.trim();
   if (full) return full.split(" ")[0];
   if (email) return email.split("@")[0];
-  return "Martín";
+  return null;
 }
 
 export function HomeHero() {
-  const { user } = useSession();
-  const { data: profile } = useApi<ProfileResponse>(user ? "/api/profile" : null, undefined, {
-    enabled: Boolean(user),
-  });
+  const { user, loading: sessionLoading } = useSession();
+  const { data: profile, loading: profileLoading } = useApi<ProfileResponse>(
+    user ? "/api/profile" : null,
+    undefined,
+    { enabled: Boolean(user) }
+  );
 
-  const name = firstName(profile ?? null, user?.email);
+  if (sessionLoading || !user) {
+    return null;
+  }
+
+  const name = firstName(profile ?? null, user.email);
 
   return (
     <section className="ci-card-compact max-lg:shadow-sm lg:rounded-[22px] lg:px-8 lg:py-7 lg:shadow-[0_4px_24px_-10px_rgba(62,79,60,0.1)]">
@@ -34,7 +40,9 @@ export function HomeHero() {
           }).format(new Date())}
         </p>
         <h1 className="text-lg font-semibold tracking-tight text-foreground lg:text-2xl xl:text-[1.85rem]">
-          ¡Qué bueno verte, {name}!
+          {name && !profileLoading
+            ? `¡Qué bueno verte, ${name}!`
+            : "¡Qué bueno verte!"}
         </h1>
         <p className="text-sm text-muted-foreground lg:text-base">
           Tus propiedades, tus huéspedes, todo en armonía.

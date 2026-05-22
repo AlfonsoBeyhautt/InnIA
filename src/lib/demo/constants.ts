@@ -16,15 +16,20 @@ export const DEMO_UNIT_IDS: Record<string, string> = {
   "paloma-2": "20000000-0000-4000-8000-000000000013",
 };
 
+/** Cuenta demo compartida (ChatGPT / pruebas). */
+export const DEMO_ACCOUNT_EMAIL = "demo@innia.com";
+
 /** Email patterns that auto-claim legacy demo rows (substring match, case-insensitive). */
 export const DEMO_CLAIM_EMAIL_PATTERNS = [
   "alfonsobeyhaut",
   "beyhaut",
   "alfonso",
+  "demo@innia",
 ];
 
 export function isDemoAccountEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   const lower = email.toLowerCase();
+  if (lower === DEMO_ACCOUNT_EMAIL) return true;
   return DEMO_CLAIM_EMAIL_PATTERNS.some((p) => lower.includes(p));
 }

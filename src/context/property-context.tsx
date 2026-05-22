@@ -33,6 +33,10 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const res = await fetch("/api/properties");
+      if (res.status === 401) {
+        setProperties([]);
+        return;
+      }
       if (res.ok) {
         const rows = (await res.json()) as Property[];
         setProperties(

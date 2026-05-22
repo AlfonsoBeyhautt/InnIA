@@ -8,7 +8,8 @@
     "build": "next build",
     "build:clean": "rm -rf .next && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ensure-demo-user": "node scripts/ensure-demo-user.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",

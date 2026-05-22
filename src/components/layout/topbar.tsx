@@ -75,7 +75,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleUnauthorized = useCallback(() => {
-    router.replace("/login");
+    router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
   }, [router]);
 
   const notificationsUrl = user ? "/api/notifications" : null;
@@ -106,7 +106,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
-      router.replace("/login");
+      router.replace("/");
       router.refresh();
     } catch {
       setLoggingOut(false);

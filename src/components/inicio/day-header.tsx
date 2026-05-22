@@ -25,7 +25,7 @@ export function DayHeader({ attentionCount, aiResolvedCount }: DayHeaderProps) {
       <div className="space-y-3">
         <p className="text-sm capitalize text-muted-foreground">{dateLabel}</p>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.85rem]">
-          ¡Hola, Martín!
+          Tu día en InnIA
         </h1>
         <p className="max-w-2xl text-base font-medium text-foreground">
           {attentionCount > 0

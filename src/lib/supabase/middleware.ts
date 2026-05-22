@@ -8,7 +8,16 @@ export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  const pathname = request.nextUrl.pathname;
+  const isApp = pathname.startsWith("/app");
+
   if (!url || !key) {
+    if (isApp) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("error", "supabase");
+      return NextResponse.redirect(loginUrl);
+    }
     return supabaseResponse;
   }
 
@@ -31,8 +40,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-  const isApp = pathname.startsWith("/app");
   const isAuthPage = pathname === "/login" || pathname === "/signup";
   const isAuthCallback = pathname.startsWith("/auth/");
 
