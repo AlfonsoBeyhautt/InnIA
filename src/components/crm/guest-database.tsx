@@ -60,6 +60,7 @@ export function GuestDatabase({
   openAddSignal?: number;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(guests[0]?.id ?? null);
+  const [mobileShowList, setMobileShowList] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
@@ -145,9 +146,15 @@ export function GuestDatabase({
     recurrentFilter !== "all";
 
   return (
-    <div className="flex min-h-[calc(100vh-12rem)] gap-0 overflow-hidden rounded-2xl border border-primary/12 bg-card shadow-sm">
-      <div className="flex w-full max-w-[380px] shrink-0 flex-col border-r border-border/80">
-        <div className="space-y-3 border-b border-border/80 bg-sand/60/80 p-4">
+    <div className="relative flex min-h-[calc(100dvh-8rem)] flex-col gap-0 overflow-hidden rounded-2xl border border-primary/12 bg-card shadow-sm max-lg:min-h-[calc(100dvh-3rem-env(safe-area-inset-top,0px))] lg:min-h-[calc(100vh-12rem)] lg:flex-row">
+      <div
+        className={cn(
+          "flex w-full max-w-[380px] shrink-0 flex-col border-r border-border/80",
+          "max-lg:absolute max-lg:inset-0 max-lg:z-[1] max-lg:max-w-none",
+          !mobileShowList && "max-lg:hidden"
+        )}
+      >
+        <div className="space-y-2 border-b border-border/80 bg-sand/60/80 p-3 max-lg:p-3 lg:space-y-3 lg:p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -253,7 +260,10 @@ export function GuestDatabase({
               <li key={g.id}>
                 <button
                   type="button"
-                  onClick={() => setSelectedId(g.id)}
+                  onClick={() => {
+                    setSelectedId(g.id);
+                    setMobileShowList(false);
+                  }}
                   className={cn(
                     "flex w-full gap-3 px-4 py-3.5 text-left transition-colors hover:bg-primary/5",
                     selected?.id === g.id && "bg-primary/8 ring-1 ring-inset ring-primary/20"
@@ -292,17 +302,34 @@ export function GuestDatabase({
         </ScrollArea>
       </div>
 
-      <GuestDetailPanel
-        guest={selected}
-        onSave={onSave}
-        onEdit={() => {
-          if (selected) {
-            setEditingGuest(selected);
-            setFormOpen(true);
-          }
-        }}
-        onNewReservation={() => setIntegrationOpen(true)}
-      />
+      <div
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 flex-col",
+          "max-lg:absolute max-lg:inset-0 max-lg:z-[2] max-lg:bg-card",
+          mobileShowList && "max-lg:hidden"
+        )}
+      >
+        {selected && (
+          <button
+            type="button"
+            onClick={() => setMobileShowList(true)}
+            className="ci-touch-target flex items-center gap-1.5 border-b border-border/80 px-3 py-2 text-xs font-medium text-muted-foreground lg:hidden"
+          >
+            ← Huéspedes
+          </button>
+        )}
+        <GuestDetailPanel
+          guest={selected}
+          onSave={onSave}
+          onEdit={() => {
+            if (selected) {
+              setEditingGuest(selected);
+              setFormOpen(true);
+            }
+          }}
+          onNewReservation={() => setIntegrationOpen(true)}
+        />
+      </div>
 
       <GuestFormDialog
         open={formOpen}
@@ -345,8 +372,8 @@ function GuestDetailPanel({
 
   return (
     <ScrollArea className="flex-1">
-      <div className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border/80 pb-5">
+      <div className="p-4 max-lg:p-3 lg:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/80 pb-4 max-lg:gap-2 lg:gap-4 lg:pb-5">
           <div className="flex gap-4">
             <Avatar className="h-14 w-14">
               <AvatarFallback className="bg-primary/10 text-lg text-primary">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef } from "react";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { motion } from "framer-motion";
 import { cn, propertyName } from "@/lib/utils";
 import type { PropertyId } from "@/types";
@@ -67,12 +68,16 @@ export function PmsTimelineCalendar({
   emptyOverlay,
 }: PmsTimelineCalendarProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isCompact = useMediaQuery("(max-width: 1023px)");
+  const dayWidth = isCompact ? 40 : DAY_WIDTH;
+  const unitColWidth = isCompact ? 128 : UNIT_COL_WIDTH;
+  const rowHeight = isCompact ? 40 : ROW_HEIGHT;
   const dayCount = VIEW_DAYS[range];
   const days = useMemo(
     () => generateDateRange(rangeStart, dayCount),
     [rangeStart, dayCount]
   );
-  const timelineWidth = dayCount * DAY_WIDTH;
+  const timelineWidth = dayCount * dayWidth;
 
   const units = useMemo(() => {
     let list = unitsFromReservations(reservations);
@@ -100,11 +105,11 @@ export function PmsTimelineCalendar({
   return (
     <div className="ci-surface overflow-hidden border-border/70/80">
       <div ref={scrollRef} className="overflow-x-auto">
-        <div className="relative" style={{ minWidth: UNIT_COL_WIDTH + timelineWidth }}>
+        <div className="relative" style={{ minWidth: unitColWidth + timelineWidth }}>
           <div className="sticky top-0 z-20 flex border-b border-border/70 bg-muted/95 backdrop-blur-sm">
             <div
-              className="sticky left-0 z-30 shrink-0 border-r border-border/70 bg-muted px-3 py-2.5"
-              style={{ width: UNIT_COL_WIDTH }}
+              className="sticky left-0 z-30 shrink-0 border-r border-border/70 bg-muted px-2 py-2 max-lg:px-2 lg:px-3 lg:py-2.5"
+              style={{ width: unitColWidth }}
             >
               <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                 Unidad
@@ -116,7 +121,7 @@ export function PmsTimelineCalendar({
                 return (
                   <div
                     key={d.toISOString()}
-                    style={{ width: DAY_WIDTH }}
+                    style={{ width: dayWidth }}
                     className={cn(
                       "shrink-0 border-r border-border/70/80 px-1 py-2 text-center",
                       isToday && "bg-primary/10"
@@ -151,28 +156,28 @@ export function PmsTimelineCalendar({
                   <div
                     key={unit.id}
                     className="flex border-b border-border/50 hover:bg-sand/60/50"
-                    style={{ height: ROW_HEIGHT }}
+                    style={{ height: rowHeight }}
                   >
                     <div
-                      className="sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border/70 bg-card px-3"
-                      style={{ width: UNIT_COL_WIDTH }}
+                      className="sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border/70 bg-card px-2 max-lg:px-2 lg:px-3"
+                      style={{ width: unitColWidth }}
                     >
                       <span className="text-xs font-semibold text-foreground">{unit.name}</span>
                       <span className="text-[10px] text-muted-foreground">{unit.shortLabel}</span>
                     </div>
                     <div
                       className="relative shrink-0"
-                      style={{ width: timelineWidth, height: ROW_HEIGHT }}
+                      style={{ width: timelineWidth, height: rowHeight }}
                     >
                       {days.map((d, i) => (
                         <motion.div
                           key={i}
                           className="absolute top-0 bottom-0 border-r border-border/50/80"
-                          style={{ left: i * DAY_WIDTH, width: DAY_WIDTH }}
+                          style={{ left: i * dayWidth, width: dayWidth }}
                         />
                       ))}
                       {unitRes.map((res) => {
-                        const bar = reservationBarStyle(res, rangeStart, dayCount);
+                        const bar = reservationBarStyle(res, rangeStart, dayCount, dayWidth);
                         if (!bar) return null;
                         const style = platformTimelineStyles[res.platform];
                         const selected = selectedReservationId === res.id;
@@ -218,7 +223,7 @@ export function PmsTimelineCalendar({
           {!hasReservations && emptyOverlay && (
             <div
               className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
-              style={{ left: UNIT_COL_WIDTH }}
+              style={{ left: unitColWidth }}
             >
               <div className="pointer-events-auto mx-4 max-w-md rounded-2xl border border-border/60 bg-card/95 px-6 py-5 text-center shadow-[0_8px_32px_-12px_rgba(62,79,60,0.12)] backdrop-blur-sm">
                 {emptyOverlay}
@@ -228,7 +233,7 @@ export function PmsTimelineCalendar({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 border-t border-border/70 bg-sand/60/80 px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-2 border-t border-border/70 bg-sand/60/80 px-3 py-2 max-lg:gap-2 max-lg:px-3 max-lg:py-2 lg:gap-4 lg:px-4 lg:py-2.5">
         {Object.entries(platformTimelineStyles).map(([platform, s]) => (
           <span key={platform} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span

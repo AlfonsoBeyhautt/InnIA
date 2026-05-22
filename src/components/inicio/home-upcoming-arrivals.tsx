@@ -13,7 +13,7 @@ export function HomeUpcomingArrivals({ reservations }: { reservations: Reservati
     .slice(0, 4);
 
   return (
-    <section className="flex h-full min-h-[260px] flex-col rounded-[20px] border border-border/70 bg-card p-5 shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)] sm:p-5">
+    <section className="ci-card-compact flex h-full min-h-0 flex-col max-lg:min-h-[180px] lg:min-h-[260px] lg:rounded-[20px] lg:p-5 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="ci-section-title">Próximas llegadas</h2>

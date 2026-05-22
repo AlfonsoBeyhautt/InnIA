@@ -83,12 +83,12 @@ export function HomeMetricCards({
         return (
           <article
             key={m.label}
-            className="flex flex-col gap-3 rounded-[20px] border border-border/70 bg-card px-4 py-4 shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)] transition-all duration-200 hover:-translate-y-px hover:shadow-[0_6px_24px_-8px_rgba(62,79,60,0.12)]"
+            className="ci-card-compact flex flex-col gap-2 max-lg:gap-2 lg:gap-3 lg:rounded-[20px] lg:px-4 lg:py-4 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)] lg:transition-all lg:duration-200 lg:hover:-translate-y-px lg:hover:shadow-[0_6px_24px_-8px_rgba(62,79,60,0.12)]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-[13px] text-muted-foreground">{m.label}</p>
-                <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight">
+                <p className="text-xs text-muted-foreground lg:text-[13px]">{m.label}</p>
+                <p className="mt-0.5 text-xl font-semibold tabular-nums tracking-tight lg:text-2xl">
                   {m.value}
                 </p>
                 <p className={`mt-0.5 text-[11px] font-medium ${m.deltaTone}`}>{m.delta}</p>

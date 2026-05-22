@@ -12,7 +12,7 @@ export function HomeUrgentTasks({ tasks }: { tasks: OperationTask[] }) {
   );
 
   return (
-    <section className="flex h-full min-h-[180px] flex-col justify-between gap-4 rounded-[20px] border border-border/70 bg-card p-5 shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)]">
+    <section className="ci-card-compact flex h-full min-h-0 flex-col justify-between gap-3 max-lg:min-h-[140px] lg:min-h-[180px] lg:gap-4 lg:rounded-[20px] lg:p-5 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)]">
       <div className="flex gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-terracotta/15 text-terracotta">
           <AlertTriangle className="h-5 w-5" />

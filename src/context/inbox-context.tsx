@@ -122,6 +122,16 @@ export function InboxProvider({ children }: { children: ReactNode }) {
   const [mobileShowList, setMobileShowList] = useState(true);
   const [aiProcessingId, setAiProcessingId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      if (!mq.matches) setAiPanelOpen(false);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const refetch = useCallback(async () => {
     setLoading(true);
     try {

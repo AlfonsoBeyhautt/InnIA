@@ -68,8 +68,10 @@ export default function ReportesPage() {
               <Sparkles className="h-4 w-4" />
               Análisis operativo
             </p>
-            <h1 className="mt-1.5 text-2xl font-semibold tracking-tight">Reportes</h1>
-            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
+            <h1 className="mt-1 text-lg font-semibold tracking-tight lg:mt-1.5 lg:text-2xl">
+              Reportes
+            </h1>
+            <p className="mt-1 max-w-2xl text-xs text-muted-foreground lg:mt-1.5 lg:text-sm">
               Métricas omnicanal, IA y campañas para alquileres temporarios.
             </p>
           </div>
@@ -92,10 +94,10 @@ export default function ReportesPage() {
           ].map((card) => (
             <div
               key={card.label}
-              className="rounded-xl border border-border/70 bg-white p-4 shadow-sm"
+              className="ci-card-compact max-lg:py-3 lg:rounded-xl lg:p-4 lg:shadow-sm"
             >
-              <p className="text-xs text-muted-foreground">{card.label}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{card.value}</p>
+              <p className="text-[11px] text-muted-foreground lg:text-xs">{card.label}</p>
+              <p className="mt-0.5 text-xl font-semibold tabular-nums lg:mt-1 lg:text-2xl">{card.value}</p>
             </div>
           ))}
         </div>

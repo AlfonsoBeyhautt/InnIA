@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Bot, CheckCircle2, ClipboardList, Send, User } from "lucide-react";
+import { Bot, CheckCircle2, ClipboardList, Send, User } from "lucide-react";
 import { useInbox } from "@/context/inbox-context";
 import { useToast } from "@/context/toast-context";
 import { useProperty } from "@/context/property-context";
@@ -22,7 +22,6 @@ export function MessageThread() {
     selected,
     sendOwnerMessage,
     getAnalysis,
-    setMobileShowList,
     markResolved,
     createTaskFromConversation,
     reclassifyIntent,
@@ -66,19 +65,13 @@ export function MessageThread() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-border/70 bg-white px-4 py-3">
+      <div className="sticky top-0 z-[1] shrink-0 border-b border-border/70 bg-white/95 px-3 py-2 backdrop-blur-sm max-lg:px-3 max-lg:py-2 lg:static lg:px-4 lg:py-3">
         <div className="flex items-start gap-2">
-          <button
-            type="button"
-            onClick={() => setMobileShowList(true)}
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/70 text-muted-foreground hover:bg-sand/60 lg:hidden"
-            aria-label="Volver"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
           <div className="min-w-0 flex-1">
-            <h2 className="truncate font-semibold text-foreground">{selected.guestName}</h2>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <h2 className="truncate text-sm font-semibold text-foreground lg:text-base">
+              {selected.guestName}
+            </h2>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground max-lg:max-h-12 max-lg:overflow-y-auto lg:mt-1 lg:gap-2 lg:text-xs">
               <PlatformBadge platform={selected.platform} />
               <IntentCategoryBadge category={selected.intentCategory} />
               <span>{resolvePropertyName(selected.propertyId)}</span>
@@ -112,11 +105,11 @@ export function MessageThread() {
                 </Badge>
               ))}
             </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-1.5 flex flex-wrap gap-1 max-lg:overflow-x-auto max-lg:pb-0.5 lg:mt-2 lg:gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 text-[11px]"
+                className="h-7 shrink-0 text-[10px] max-lg:h-8 lg:text-[11px]"
                 onClick={async () => {
                   try {
                     await markResolved(selected.id);
@@ -158,7 +151,10 @@ export function MessageThread() {
         </div>
       </div>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-sand/60/40 p-4">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-sand/60/40 p-3 max-lg:p-2.5 lg:p-4"
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={selected.id}
@@ -173,7 +169,10 @@ export function MessageThread() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.03, 0.2) }}
-                className={cn("flex gap-2.5", msg.sender === "guest" ? "justify-start" : "justify-end")}
+                className={cn(
+                  "flex gap-2 max-lg:gap-2 lg:gap-2.5",
+                  msg.sender === "guest" ? "justify-start" : "justify-end"
+                )}
               >
                 {msg.sender === "guest" && (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-white">
@@ -182,7 +181,7 @@ export function MessageThread() {
                 )}
                 <div
                   className={cn(
-                    "max-w-[min(88%,480px)] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm",
+                    "max-w-[min(92%,480px)] rounded-2xl px-3 py-2 text-[13px] shadow-sm max-lg:max-w-[88%] lg:px-3.5 lg:py-2.5 lg:text-sm",
                     msg.sender === "guest" && "border border-border/70 bg-white",
                     msg.sender === "ai" && "border border-primary/20 bg-primary/8",
                     msg.sender === "owner" && "bg-olive text-cream"
@@ -231,19 +230,19 @@ export function MessageThread() {
         </AnimatePresence>
       </div>
 
-      <div className="shrink-0 border-t border-border/70 bg-white p-3">
+      <div className="ci-safe-bottom sticky bottom-0 z-[1] shrink-0 border-t border-border/70 bg-white p-2.5 max-lg:p-2 lg:p-3">
         <div className="flex gap-2">
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Escribí un mensaje al huésped..."
-            className="min-h-[44px] resize-none border-border/70 bg-sand/60 text-sm focus-visible:ring-primary/30"
+            className="min-h-[40px] resize-none border-border/70 bg-sand/60 text-sm focus-visible:ring-primary/30 max-lg:text-base lg:min-h-[44px]"
             rows={2}
           />
           <Button
             size="icon"
-            className="h-11 w-11 shrink-0 self-end"
+            className="ci-touch-target h-10 w-10 shrink-0 self-end lg:h-11 lg:w-11"
             onClick={handleSend}
             disabled={!draft.trim()}
           >

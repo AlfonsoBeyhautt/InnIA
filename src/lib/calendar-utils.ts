@@ -39,7 +39,8 @@ export function generateDateRange(start: Date, count: number): Date[] {
 export function reservationBarStyle(
   reservation: Reservation,
   rangeStart: Date,
-  totalDays: number
+  totalDays: number,
+  dayWidth: number = DAY_WIDTH
 ): { left: number; width: number } | null {
   const checkIn = parseDate(reservation.checkIn);
   const checkOut = parseDate(reservation.checkOut);
@@ -55,8 +56,8 @@ export function reservationBarStyle(
   const spanDays = daysBetween(visibleStart, visibleEnd);
 
   return {
-    left: offsetDays * DAY_WIDTH + 2,
-    width: Math.max(spanDays * DAY_WIDTH - 4, 24),
+    left: offsetDays * dayWidth + 2,
+    width: Math.max(spanDays * dayWidth - 4, 24),
   };
 }
 

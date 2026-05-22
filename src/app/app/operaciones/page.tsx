@@ -63,12 +63,14 @@ export default function OperacionesPage() {
   };
 
   return (
-    <div className="ci-page space-y-8">
+    <div className="ci-page max-lg:space-y-5 space-y-8">
       <PageSection>
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Limpieza y mantenimiento</h1>
-            <p className="mt-1 text-muted-foreground">
+        <header className="flex flex-wrap items-end justify-between gap-3 max-lg:gap-2 lg:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg font-semibold tracking-tight lg:text-2xl">
+              Limpieza y mantenimiento
+            </h1>
+            <p className="mt-0.5 text-xs text-muted-foreground max-lg:line-clamp-2 lg:mt-1 lg:text-base">
               Centro de operaciones — tareas, asignaciones y actividad en tiempo real
             </p>
           </div>
@@ -90,7 +92,7 @@ export default function OperacionesPage() {
                 <m.icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-semibold tabular-nums text-primary">{m.value}</p>
+                <p className="text-xl font-semibold tabular-nums text-primary lg:text-2xl">{m.value}</p>
                 <p className="text-xs text-muted-foreground">{m.label}</p>
               </div>
             </div>

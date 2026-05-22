@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { downloadCsv } from "@/lib/export-csv";
@@ -33,7 +33,7 @@ function OperationalChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium",
+        "inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-medium max-lg:px-2 max-lg:py-1 lg:gap-1.5 lg:px-3 lg:py-1.5 lg:text-xs",
         highlight
           ? "border-amber-300/60 bg-amber-50 text-amber-900"
           : "border-border/70 bg-white text-foreground"
@@ -51,7 +51,21 @@ export default function ReservasPage() {
   const [view, setView] = useState<CalendarViewRange>("quincena");
   const [rangeStart, setRangeStart] = useState(getDefaultRangeStart);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
-  const [detailOpen, setDetailOpen] = useState(true);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const desktopDetailSynced = useRef(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      if (mq.matches && !desktopDetailSynced.current) {
+        setDetailOpen(true);
+        desktopDetailSynced.current = true;
+      }
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const { data, refetch } = useApi<Reservation[]>(
     `/api/reservations${selectedProperty !== "all" ? `?property=${selectedProperty}` : ""}`,
@@ -112,17 +126,19 @@ export default function ReservasPage() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
-      <div className="shrink-0 border-b border-border/70 bg-card px-4 py-3 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">Reservas</h1>
-            <p className="text-sm text-muted-foreground">
+    <div className="flex flex-col max-lg:h-[calc(100dvh-3rem-env(safe-area-inset-top,0px))] lg:h-[calc(100vh-4rem)]">
+      <div className="shrink-0 border-b border-border/70 bg-card px-3 py-2.5 max-lg:sticky max-lg:top-0 max-lg:z-10 sm:px-4 sm:py-3 lg:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 max-lg:gap-2 lg:gap-3">
+          <div className="min-w-0">
+            <h1 className="text-base font-semibold tracking-tight text-foreground lg:text-xl">
+              Reservas
+            </h1>
+            <p className="text-xs text-muted-foreground max-lg:truncate lg:text-sm">
               Calendario operativo por unidad
               {selectedProperty !== "all" && ` · ${propertyName(selectedProperty)}`}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="-mx-1 flex flex-nowrap gap-1.5 overflow-x-auto pb-0.5 max-lg:max-w-full lg:mx-0 lg:flex-wrap lg:gap-2">
             <OperationalChip label="Check-ins hoy" value={checkInsToday} highlight={checkInsToday > 0} />
             <OperationalChip label="Check-outs hoy" value={checkOutsToday} />
             <OperationalChip label="Por revisar" value={toReview} highlight={toReview > 0} />
@@ -130,7 +146,7 @@ export default function ReservasPage() {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 max-lg:mt-2 lg:mt-3 lg:gap-2">
           <div className="flex rounded-lg border border-border/70 bg-sand/60 p-0.5">
             {(["semana", "quincena", "mes"] as const).map((v) => (
               <button
@@ -198,7 +214,7 @@ export default function ReservasPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="ml-auto text-xs"
+            className="ml-auto hidden text-xs lg:inline-flex"
             onClick={() => setDetailOpen((o) => !o)}
           >
             {detailOpen ? "Ocultar detalle" : "Ver detalle"}
@@ -206,8 +222,8 @@ export default function ReservasPage() {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1">
-        <div className="relative min-w-0 flex-1 overflow-hidden p-3 sm:p-4">
+      <div className="relative flex min-h-0 flex-1">
+        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden p-2 max-lg:p-2 lg:p-3 xl:p-4">
           <PmsTimelineCalendar
             reservations={filtered}
             propertyFilter={selectedProperty}
@@ -222,8 +238,31 @@ export default function ReservasPage() {
             }}
           />
         </div>
+
+        {detailOpen && selectedReservation && (
+          <>
+            <button
+              type="button"
+              aria-label="Cerrar detalle"
+              className="fixed inset-0 z-40 bg-black/35 lg:hidden"
+              onClick={() => setDetailOpen(false)}
+            />
+            <div className="ci-safe-bottom fixed inset-x-0 bottom-0 z-50 flex max-h-[min(85dvh,560px)] flex-col overflow-hidden rounded-t-2xl border-t border-border/70 bg-card shadow-2xl lg:hidden">
+              <div className="flex shrink-0 items-center justify-center py-2">
+                <div className="h-1 w-10 rounded-full bg-border" />
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                <ReservationDetailPanel
+                  reservation={selectedReservation}
+                  onClose={() => setDetailOpen(false)}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
         {detailOpen && (
-          <div className="w-full max-w-[340px] shrink-0 border-l border-border/70 bg-card p-3 sm:w-[340px]">
+          <div className="hidden w-[340px] max-w-[340px] shrink-0 border-l border-border/70 bg-card p-3 lg:block">
             <ReservationDetailPanel
               reservation={selectedReservation}
               onClose={() => setDetailOpen(false)}

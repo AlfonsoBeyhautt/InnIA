@@ -156,11 +156,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/80 bg-cream/90 px-4 backdrop-blur-md sm:px-6">
+    <header className="ci-app-chrome-h sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b border-border/80 bg-cream/90 px-3 backdrop-blur-md max-lg:pt-[env(safe-area-inset-top,0px)] sm:gap-3 sm:px-4 lg:h-16 lg:gap-3 lg:px-6">
       <Button
         variant="ghost"
         size="icon"
-        className="lg:hidden"
+        className="ci-touch-target shrink-0 lg:hidden"
         onClick={onMenuClick}
         aria-label="Menú"
       >
@@ -169,7 +169,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
       <PropertySwitcher />
 
-      <GlobalSearch className="relative ml-auto hidden flex-1 sm:block" />
+      <GlobalSearch className="relative ml-auto hidden min-w-0 flex-1 md:block" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

@@ -85,7 +85,7 @@ export function HomeInsightCarousel({
 
   return (
     <section
-      className="flex h-full min-h-[200px] flex-col rounded-[20px] border border-border/70 bg-card p-4 shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)] sm:p-5"
+      className="ci-card-compact flex h-full min-h-0 flex-col max-lg:min-h-[160px] lg:min-h-[200px] lg:rounded-[20px] lg:p-4 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)] sm:lg:p-5"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

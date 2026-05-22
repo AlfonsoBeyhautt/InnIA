@@ -98,12 +98,12 @@ function SettingsDashboardInner() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-10rem)] overflow-hidden rounded-[22px] border border-border/80 bg-card shadow-[0_4px_24px_-8px_rgba(62,79,60,0.1)]">
-      <nav className="w-56 shrink-0 border-r border-border/60 bg-olive/5 p-3">
-        <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+    <div className="flex min-h-[calc(100vh-10rem)] flex-col overflow-hidden rounded-[22px] border border-border/80 bg-card shadow-[0_4px_24px_-8px_rgba(62,79,60,0.1)] max-lg:min-h-0 max-lg:rounded-2xl lg:flex-row">
+      <nav className="shrink-0 border-b border-border/60 bg-olive/5 p-2 max-lg:overflow-x-auto max-lg:px-2 max-lg:py-2 lg:w-56 lg:border-b-0 lg:border-r lg:p-3">
+        <p className="mb-2 hidden px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground lg:block">
           Configuración
         </p>
-        <ul className="space-y-0.5">
+        <ul className="flex gap-1 max-lg:flex-nowrap lg:flex-col lg:space-y-0.5">
           {nav.map((item) => {
             const Icon = item.icon;
             return (
@@ -112,13 +112,13 @@ function SettingsDashboardInner() {
                   type="button"
                   onClick={() => setActive(item.id)}
                   className={cn(
-                    "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm font-medium transition-colors",
+                    "flex shrink-0 items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition-colors max-lg:whitespace-nowrap lg:w-full lg:gap-2.5 lg:text-sm",
                     active === item.id
                       ? "bg-olive text-cream shadow-sm"
                       : "text-muted-foreground hover:bg-sand/80"
                   )}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  <Icon className="h-3.5 w-3.5 shrink-0 lg:h-4 lg:w-4" />
                   {item.label}
                 </button>
               </li>
@@ -127,7 +127,7 @@ function SettingsDashboardInner() {
         </ul>
       </nav>
 
-      <div className="min-w-0 flex-1 overflow-y-auto p-6 sm:p-8">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4 max-lg:p-4 sm:max-lg:p-5 lg:p-6 xl:p-8">
         {active === "integraciones" && (
           <div className="max-w-2xl space-y-6">
             <div>

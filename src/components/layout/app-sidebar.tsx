@@ -44,7 +44,7 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
     <aside
       className={cn(
         "ci-sidebar flex h-full shrink-0 flex-col overflow-hidden transition-[width] duration-200 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
-        mobile ? "w-[260px]" : showLabels ? "w-[260px]" : "w-[72px]"
+        mobile ? "h-full w-full" : showLabels ? "w-[260px]" : "w-[72px]"
       )}
     >
       <div

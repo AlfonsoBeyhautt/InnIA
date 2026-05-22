@@ -108,18 +108,20 @@ export function AiCopilotPanel({ variant = "sidebar", onClose }: AiCopilotPanelP
           Asistente IA
         </span>
         <div className="flex items-center">
-          <button
-            type="button"
-            onClick={() => setAiPanelExpanded(!aiPanelExpanded)}
-            className="rounded p-1 text-muted-foreground hover:bg-muted"
-            title={aiPanelExpanded ? "Compactar" : "Expandir"}
-          >
-            {aiPanelExpanded ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </button>
+          {!isSheet && (
+            <button
+              type="button"
+              onClick={() => setAiPanelExpanded(!aiPanelExpanded)}
+              className="rounded p-1 text-muted-foreground hover:bg-muted"
+              title={aiPanelExpanded ? "Compactar" : "Expandir"}
+            >
+              {aiPanelExpanded ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {

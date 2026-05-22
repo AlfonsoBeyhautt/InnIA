@@ -53,7 +53,7 @@ export function ConversationList() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-card">
-      <div className="shrink-0 space-y-2 border-b border-border/70 p-3">
+      <div className="shrink-0 space-y-1.5 border-b border-border/70 p-2 max-lg:p-2.5 lg:space-y-2 lg:p-3">
         <div className="flex gap-1 overflow-x-auto pb-0.5">
           {intentTabs.map((tab) => (
             <button
@@ -86,7 +86,7 @@ export function ConversationList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar conversación..."
-            className="h-9 border-border/80 bg-sand/50 pl-8 text-sm"
+            className="h-8 max-lg:h-9 border-border/80 bg-sand/50 pl-8 text-sm max-lg:text-xs lg:h-9"
           />
         </div>
 
@@ -141,7 +141,7 @@ export function ConversationList() {
                     type="button"
                     onClick={() => setSelectedId(c.id)}
                     className={cn(
-                      "flex w-full gap-2.5 px-3 py-3 text-left transition-colors",
+                      "flex w-full gap-2 px-2.5 py-2.5 text-left transition-colors max-lg:gap-2 lg:gap-2.5 lg:px-3 lg:py-3",
                       active
                         ? "bg-primary/12 ring-1 ring-inset ring-primary/20"
                         : "hover:bg-sand/60",

@@ -40,7 +40,7 @@ export function OperationsKanban({
   onMoveTask,
 }: OperationsKanbanProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 max-lg:gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
       {columns.map((col, colIndex) => {
         const colTasks = tasks.filter((t) => t.status === col.status);
         return (

@@ -33,10 +33,10 @@ export function PropertySwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="h-9 gap-2 rounded-xl border-border/80 bg-card font-normal shadow-sm"
+          className="h-9 max-w-[min(52vw,200px)] gap-1.5 rounded-xl border-border/80 bg-card px-2.5 font-normal shadow-sm sm:max-w-none sm:gap-2 sm:px-3"
         >
-          <Building2 className="h-4 w-4 text-olive" />
-          <span className="max-w-[180px] truncate hidden sm:inline">
+          <Building2 className="h-4 w-4 shrink-0 text-olive" />
+          <span className="min-w-0 flex-1 truncate text-left text-xs sm:text-sm">
             {loading && properties.length === 0 ? (
               <Loader2 className="inline h-3.5 w-3.5 animate-spin" />
             ) : (

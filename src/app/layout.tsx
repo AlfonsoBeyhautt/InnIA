@@ -6,7 +6,13 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
   title: "InnIA — Gestión de alquileres temporales",
-  description: "Plataforma de operaciones para propietarios de alquileres en Uruguay y Latinoamérica.",
+  description: "Plataforma de operaciones para propietarios de alquileres en Uruguay y Latinoamérica",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

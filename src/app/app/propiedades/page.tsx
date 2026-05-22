@@ -57,10 +57,10 @@ export default function PropiedadesPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 sm:p-8">
+    <div className="ci-page mx-auto max-w-6xl space-y-4 max-lg:space-y-4 lg:space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold">Propiedades</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-lg font-semibold lg:text-2xl">Propiedades</h1>
+        <p className="text-xs text-muted-foreground lg:text-base">
           Administración interna de tus alojamientos — datos persistentes en Supabase.
         </p>
       </header>
@@ -72,7 +72,7 @@ export default function PropiedadesPage() {
             : "No hay propiedades para el filtro seleccionado."}
         </p>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 max-lg:gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3 xl:gap-6">
           {filtered.map((p) => {
             const upcoming = reservations.find(
               (r) => r.propertyId === p.id && r.status !== "cancelada"

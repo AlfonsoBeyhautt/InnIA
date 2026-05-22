@@ -476,15 +476,15 @@ export function OnboardingWizard() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-sand/30 p-6">
-      <div className="w-full max-w-xl rounded-2xl border border-border/70 bg-white p-8 shadow-sm">
+    <div className="flex min-h-[calc(100dvh-3rem)] items-center justify-center bg-sand/30 p-3 max-lg:px-3 max-lg:py-4 lg:min-h-[calc(100vh-4rem)] lg:p-6">
+      <div className="w-full max-w-xl rounded-2xl border border-border/70 bg-white p-4 shadow-sm max-lg:max-h-[calc(100dvh-4rem)] max-lg:overflow-y-auto lg:p-8">
         <p className="text-xs font-bold uppercase tracking-widest text-primary">
           Bienvenido a InnIA · {step + 1}/{visibleSteps.length}
         </p>
         <div className="mt-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Icon className="h-6 w-6" />
         </div>
-        <h1 className="mt-4 text-2xl font-semibold">{currentMeta.title}</h1>
+        <h1 className="mt-3 text-lg font-semibold lg:mt-4 lg:text-2xl">{currentMeta.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{currentMeta.subtitle}</p>
 
         <div className="mt-6">{stepContent()}</div>
