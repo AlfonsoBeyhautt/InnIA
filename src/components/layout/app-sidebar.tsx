@@ -49,11 +49,11 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
     >
       <div
         className={cn(
-          "flex h-16 shrink-0 items-center border-b border-cream/10",
+          "flex h-16 shrink-0 items-center border-b border-cream/10 bg-white/[0.025]",
           showLabels ? "gap-2.5 px-4" : "justify-center px-0"
         )}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cream/15 text-cream">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cream/14 text-cream shadow-[0_1px_0_rgba(255,255,255,0.12)_inset] ring-1 ring-cream/10">
           <Home className="h-4 w-4" />
         </div>
         {showLabels && (
@@ -65,7 +65,7 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
       </div>
 
       <ScrollArea className="flex-1 px-2 py-4">
-        <nav className="space-y-1">
+        <nav className="space-y-1.5">
           {navigation.map((item) => {
             const active =
               pathname === item.href || pathname.startsWith(item.href + "/");
@@ -81,7 +81,7 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
                 onClick={onNavigate}
                 title={!showLabels ? item.title : undefined}
                 className={cn(
-                  "relative flex items-center rounded-xl text-sm font-medium",
+                  "relative flex items-center rounded-xl text-sm font-medium tracking-[-0.01em]",
                   showLabels ? "gap-3 px-3 py-2.5" : "justify-center px-0 py-2.5",
                   active ? "ci-sidebar-nav-active" : "ci-sidebar-nav-idle"
                 )}
@@ -109,14 +109,14 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
       </ScrollArea>
 
       {showLabels && (
-        <div className="shrink-0 border-t border-cream/10 p-3">
+        <div className="shrink-0 border-t border-cream/10 bg-black/[0.035] p-3">
           <Link
             href="/app/configuracion"
             onClick={onNavigate}
             className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-cream/10"
           >
             <Avatar className="h-9 w-9 border border-cream/20">
-              <AvatarFallback className="bg-cream/15 text-xs text-cream">
+              <AvatarFallback className="bg-cream/15 text-xs font-semibold text-cream">
                 {getInitials(displayName)}
               </AvatarFallback>
             </Avatar>

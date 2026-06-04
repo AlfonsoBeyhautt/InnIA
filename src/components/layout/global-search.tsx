@@ -90,13 +90,12 @@ export function GlobalSearch({ className }: { className?: string }) {
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setOpen(true)}
         placeholder="Buscar huéspedes, reservas, propiedades..."
-        className="h-9 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
-        aria-expanded={showPanel}
+        className="h-9 w-full rounded-xl border border-border/70 bg-card/70 pl-9 pr-3 text-sm shadow-[0_1px_0_rgba(255,255,255,0.75)_inset] outline-none transition-colors placeholder:text-muted-foreground/80 focus:border-primary/35 focus:bg-card focus:ring-2 focus:ring-primary/10"
         aria-autocomplete="list"
       />
 
       {showPanel && (
-        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-[min(420px,70vh)] overflow-y-auto rounded-xl border border-border/80 bg-card py-2 shadow-[0_12px_40px_-12px_rgba(62,79,60,0.25)]">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[min(420px,70vh)] overflow-y-auto rounded-2xl border border-border/75 bg-card/98 py-2 shadow-[0_20px_52px_-26px_rgba(46,58,42,0.45),0_1px_0_rgba(255,255,255,0.8)_inset] backdrop-blur-xl">
           {loading && (
             <div className="flex items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -130,7 +129,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                           setOpen(false);
                           setQuery("");
                         }}
-                        className="block rounded-lg px-3 py-2 transition-colors hover:bg-sand/70"
+                        className="block rounded-xl px-3 py-2 transition-colors hover:bg-sand/80"
                       >
                         <p className="text-sm font-medium text-foreground">{item.title}</p>
                         {item.subtitle && (

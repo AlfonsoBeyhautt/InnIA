@@ -83,18 +83,21 @@ export function HomeMetricCards({
         return (
           <article
             key={m.label}
-            className="ci-card-compact flex flex-col gap-2 max-lg:gap-2 lg:gap-3 lg:rounded-[20px] lg:px-4 lg:py-4 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)] lg:transition-all lg:duration-200 lg:hover:-translate-y-px lg:hover:shadow-[0_6px_24px_-8px_rgba(62,79,60,0.12)]"
+            className="group relative overflow-hidden rounded-[24px] border border-border/65 bg-card/95 p-4 shadow-[0_22px_52px_-40px_rgba(46,58,42,0.5),0_1px_0_rgba(255,255,255,0.85)_inset] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-[0_26px_62px_-42px_rgba(46,58,42,0.58),0_1px_0_rgba(255,255,255,0.9)_inset] max-lg:rounded-2xl"
           >
-            <div className="flex items-start justify-between gap-2">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/45 via-terracotta/35 to-transparent opacity-70" />
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs text-muted-foreground lg:text-[13px]">{m.label}</p>
-                <p className="mt-0.5 text-xl font-semibold tabular-nums tracking-tight lg:text-2xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {m.label}
+                </p>
+                <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-foreground">
                   {m.value}
                 </p>
-                <p className={`mt-0.5 text-[11px] font-medium ${m.deltaTone}`}>{m.delta}</p>
+                <p className={`mt-1 text-xs font-medium ${m.deltaTone}`}>{m.delta}</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/8 text-primary">
-                <Icon className="h-4 w-4" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <Icon className="h-5 w-5" />
               </div>
             </div>
             <KpiVisual

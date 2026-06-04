@@ -13,7 +13,7 @@ export function HomeUpcomingArrivals({ reservations }: { reservations: Reservati
     .slice(0, 4);
 
   return (
-    <section className="ci-card-compact flex h-full min-h-0 flex-col max-lg:min-h-[180px] lg:min-h-[260px] lg:rounded-[20px] lg:p-5 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)]">
+    <section className="flex h-full min-h-0 flex-col rounded-[24px] border border-border/65 bg-card/95 p-5 shadow-[0_22px_52px_-42px_rgba(46,58,42,0.48),0_1px_0_rgba(255,255,255,0.85)_inset] max-lg:min-h-[180px] max-lg:rounded-2xl lg:min-h-[260px]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="ci-section-title">Próximas llegadas</h2>
@@ -29,14 +29,14 @@ export function HomeUpcomingArrivals({ reservations }: { reservations: Reservati
 
       <ul className="space-y-3">
         {upcoming.length === 0 ? (
-          <li className="rounded-xl bg-sand/50 px-4 py-6 text-center text-sm text-muted-foreground">
+          <li className="rounded-2xl border border-dashed border-border/70 bg-sand/45 px-4 py-8 text-center text-sm text-muted-foreground">
             No hay llegadas programadas.
           </li>
         ) : (
           upcoming.map((r) => (
             <li
               key={r.id}
-              className="flex items-center gap-3 rounded-xl border border-border/50 bg-cream/40 px-3 py-3 transition-colors hover:bg-sand/60"
+              className="flex items-center gap-3 rounded-2xl border border-border/55 bg-cream/55 px-3 py-3 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset] transition-colors hover:bg-sand/65"
             >
               <Avatar className="h-10 w-10">
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">

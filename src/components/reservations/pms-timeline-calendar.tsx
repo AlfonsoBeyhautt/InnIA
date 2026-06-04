@@ -20,7 +20,6 @@ import {
 } from "@/lib/property-units";
 import {
   DAY_WIDTH,
-  ROW_HEIGHT,
   UNIT_COL_WIDTH,
   formatDayHeader,
   generateDateRange,

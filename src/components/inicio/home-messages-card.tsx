@@ -15,7 +15,7 @@ export function HomeMessagesCard({ conversations }: { conversations: Conversatio
     .slice(0, 4);
 
   return (
-    <section className="ci-card-compact flex h-full min-h-0 flex-col max-lg:min-h-[180px] lg:min-h-[260px] lg:rounded-[20px] lg:p-5 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)]">
+    <section className="flex h-full min-h-0 flex-col rounded-[24px] border border-border/65 bg-card/95 p-5 shadow-[0_22px_52px_-42px_rgba(46,58,42,0.48),0_1px_0_rgba(255,255,255,0.85)_inset] max-lg:min-h-[180px] max-lg:rounded-2xl lg:min-h-[260px]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="ci-section-title">Mensajes importantes</h2>
@@ -31,7 +31,7 @@ export function HomeMessagesCard({ conversations }: { conversations: Conversatio
 
       <ul className="space-y-2">
         {items.length === 0 ? (
-          <li className="rounded-xl bg-sand/50 px-4 py-6 text-center text-sm text-muted-foreground">
+          <li className="rounded-2xl border border-dashed border-border/70 bg-sand/45 px-4 py-8 text-center text-sm text-muted-foreground">
             No hay mensajes todavía. Conectá WhatsApp Business, Email o sincronizá tus canales para empezar.
           </li>
         ) : (
@@ -39,7 +39,7 @@ export function HomeMessagesCard({ conversations }: { conversations: Conversatio
             <li key={c.id}>
               <Link
                 href="/app/inbox"
-                className="flex gap-3 rounded-xl border border-transparent px-3 py-3 transition-all hover:border-border/60 hover:bg-sand/50"
+                className="flex gap-3 rounded-2xl border border-transparent px-3 py-3 transition-all hover:border-border/60 hover:bg-sand/55"
               >
                 <Avatar className="h-10 w-10 shrink-0">
                   <AvatarFallback className="bg-primary/10 text-xs text-primary">

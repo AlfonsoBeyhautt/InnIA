@@ -156,7 +156,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="ci-app-chrome-h sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b border-border/80 bg-cream/90 px-3 backdrop-blur-md max-lg:pt-[env(safe-area-inset-top,0px)] sm:gap-3 sm:px-4 lg:h-16 lg:gap-3 lg:px-6">
+    <header className="ci-app-chrome-h sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b border-border/65 bg-cream/82 px-3 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_16px_36px_-34px_rgba(46,58,42,0.5)] backdrop-blur-xl max-lg:pt-[env(safe-area-inset-top,0px)] sm:gap-3 sm:px-4 lg:h-16 lg:gap-3 lg:px-6">
       <Button
         variant="ghost"
         size="icon"
@@ -176,7 +176,10 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className={cn("relative ml-auto sm:ml-0", unread > 0 && "text-primary")}
+            className={cn(
+              "relative ml-auto border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/75 hover:text-foreground sm:ml-0",
+              unread > 0 && "text-primary"
+            )}
             aria-label="Notificaciones"
             disabled={sessionLoading}
           >
@@ -199,9 +202,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="gap-2 pl-2 pr-1">
+          <Button
+            variant="ghost"
+            className="gap-2 border border-transparent pl-2 pr-1 hover:border-border/70 hover:bg-card/75"
+          >
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-xs text-primary">
+              <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary ring-1 ring-primary/10">
                 {sessionLoading || profileLoading ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (

@@ -12,6 +12,7 @@ import {
   BedDouble,
   Bot,
   CreditCard,
+  Database,
   KeyRound,
   Mail,
   User,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { IntegrationsPanel } from "@/components/settings/integrations-panel";
 import { ProfileSection } from "@/components/settings/profile-section";
+import { DemoDataPanel } from "@/components/settings/demo-data-panel";
 
 type SectionId =
   | "perfil"
@@ -31,11 +33,13 @@ type SectionId =
   | "cerraduras"
   | "ia"
   | "equipo"
-  | "facturacion";
+  | "facturacion"
+  | "datos-demo";
 
 const nav: { id: SectionId; label: string; icon: typeof User }[] = [
   { id: "perfil", label: "Perfil y cuenta", icon: User },
   { id: "propiedades", label: "Propiedades", icon: BedDouble },
+  { id: "datos-demo", label: "Datos demo", icon: Database },
   { id: "integraciones", label: "Integraciones", icon: Mail },
   { id: "cerraduras", label: "Cerraduras", icon: KeyRound },
   { id: "ia", label: "Asistente IA", icon: Bot },
@@ -229,6 +233,8 @@ function SettingsDashboardInner() {
         )}
 
         {active === "perfil" && <ProfileSection />}
+
+        {active === "datos-demo" && <DemoDataPanel />}
 
         {active === "propiedades" && (
           <div className="max-w-xl space-y-4">
