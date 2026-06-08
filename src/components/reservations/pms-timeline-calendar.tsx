@@ -143,9 +143,9 @@ export function PmsTimelineCalendar({
   }, [reservations, units]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[22px] border border-border/80 bg-card shadow-[0_4px_24px_-8px_rgba(62,79,60,0.12)] max-lg:rounded-2xl max-lg:shadow-sm">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/80 bg-white shadow-[0_14px_34px_-32px_rgba(37,35,29,0.32)]">
       {!hasReservations && emptyBanner && (
-        <div className="shrink-0 border-b border-border/70 bg-sand/50 px-4 py-3 max-lg:px-3 max-lg:py-2.5">
+        <div className="shrink-0 border-b border-border/70 bg-warm-panel/60 px-4 py-3 max-lg:px-3 max-lg:py-2.5">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
             {emptyBanner}
           </div>
@@ -157,9 +157,9 @@ export function PmsTimelineCalendar({
           className="relative flex min-h-full flex-col"
           style={{ minWidth: gridMinWidth }}
         >
-          <div className="sticky top-0 z-20 flex shrink-0 border-b border-border/70 bg-muted/95 backdrop-blur-sm">
+          <div className="sticky top-0 z-20 flex shrink-0 border-b border-border/70 bg-warm-panel/95 backdrop-blur-sm">
             <div
-              className="sticky left-0 z-30 flex shrink-0 items-center border-r border-border/70 bg-muted px-3"
+              className="sticky left-0 z-30 flex shrink-0 items-center border-r border-border/70 bg-warm-panel px-3"
               style={{ width: unitColWidth, minHeight: rowHeight }}
             >
               <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -197,7 +197,7 @@ export function PmsTimelineCalendar({
             {groups.map((group) => (
               <div key={group.propertyId} className="relative shrink-0">
                 <div
-                  className="sticky left-0 z-10 border-b border-border/70 bg-sand/60 px-3 py-2 text-xs font-bold text-foreground"
+                  className="sticky left-0 z-10 border-b border-border/70 bg-[#f2eadf] px-3 py-2 text-xs font-bold text-foreground"
                   style={{ width: "100%", minWidth: gridMinWidth }}
                 >
                   {group.propertyName}
@@ -211,7 +211,7 @@ export function PmsTimelineCalendar({
                       style={{ height: rowHeight, minWidth: gridMinWidth }}
                     >
                       <div
-                        className="sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border/70 bg-card px-3"
+                        className="sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border/70 bg-white px-3"
                         style={{ width: unitColWidth, height: rowHeight }}
                       >
                         <span className="text-xs font-semibold text-foreground">{unit.name}</span>
@@ -296,7 +296,7 @@ export function PmsTimelineCalendar({
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-border/70 bg-sand/60/80 px-4 py-2.5 max-lg:px-3 max-lg:py-2 lg:gap-4">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-border/70 bg-white px-4 py-2.5 max-lg:px-3 max-lg:py-2 lg:gap-4">
         {Object.entries(platformTimelineStyles).map(([platform, s]) => (
           <span key={platform} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span

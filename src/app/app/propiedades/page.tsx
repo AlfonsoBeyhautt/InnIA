@@ -7,6 +7,7 @@ import { PropertyCard } from "@/components/properties/property-card";
 import { PropertyEditor } from "@/components/properties/property-editor";
 import { useApi } from "@/lib/hooks/use-api";
 import type { Property, Reservation } from "@/types";
+import { Badge } from "@/components/ui/badge";
 
 export default function PropiedadesPage() {
   const { selectedProperty, setSelectedProperty } = useProperty();
@@ -57,22 +58,39 @@ export default function PropiedadesPage() {
   };
 
   return (
-    <div className="ci-page mx-auto max-w-6xl space-y-4 max-lg:space-y-4 lg:space-y-6">
-      <header>
-        <h1 className="text-lg font-semibold lg:text-2xl">Propiedades</h1>
-        <p className="text-xs text-muted-foreground lg:text-base">
-          Administración interna de tus alojamientos — datos persistentes en Supabase.
-        </p>
+    <div className="ci-page ci-page-wide space-y-5">
+      <header className="ci-enterprise-header">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              Activos operativos
+            </p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight">Propiedades</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              Inventario profesional de alojamientos, estado operativo, canales conectados y
+              próximas reservas. Cada propiedad debe leerse como un activo administrado.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary">{filtered.length} visibles</Badge>
+            <Badge variant="success">{list.length} activos</Badge>
+          </div>
+        </div>
       </header>
 
       {filtered.length === 0 ? (
-        <p className="rounded-xl bg-muted/50 p-8 text-center text-sm text-muted-foreground">
-          {list.length === 0
-            ? "No hay propiedades cargadas. Agregá tu primera propiedad para comenzar."
-            : "No hay propiedades para el filtro seleccionado."}
-        </p>
+        <div className="rounded-2xl border border-dashed border-border bg-white p-8">
+          <p className="text-lg font-semibold">
+            {list.length === 0 ? "Todavía no hay propiedades cargadas" : "Sin resultados para este filtro"}
+          </p>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            {list.length === 0
+              ? "Agregá tu primera propiedad para activar reservas, mensajes, cerraduras, reglas de casa y reportes por activo."
+              : "Cambiá el filtro global de propiedad para volver al inventario completo."}
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-3 max-lg:gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3 xl:gap-6">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((p) => {
             const upcoming = reservations.find(
               (r) => r.propertyId === p.id && r.status !== "cancelada"

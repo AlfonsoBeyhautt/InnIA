@@ -9,6 +9,7 @@ import type { Guest } from "@/types";
 import { exportGuestsCsv } from "@/lib/guest-filters";
 import { useToast } from "@/context/toast-context";
 import { Download, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function CRMPage() {
   const { toast } = useToast();
@@ -54,7 +55,9 @@ export default function CRMPage() {
             )}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Badge variant="secondary">{guests.length} huéspedes</Badge>
+          <Badge variant="success">{filteredGuests.length} visibles</Badge>
           <Button
             variant="outline"
             size="sm"

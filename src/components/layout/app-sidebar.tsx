@@ -44,16 +44,16 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
     <aside
       className={cn(
         "ci-sidebar flex h-full shrink-0 flex-col overflow-hidden transition-[width] duration-200 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
-        mobile ? "h-full w-full" : showLabels ? "w-[260px]" : "w-[72px]"
+        mobile ? "h-full w-full" : showLabels ? "w-[248px]" : "w-[72px]"
       )}
     >
       <div
         className={cn(
-          "flex h-16 shrink-0 items-center border-b border-cream/10 bg-white/[0.025]",
+          "flex h-16 shrink-0 items-center border-b border-cream/10 bg-black/[0.055]",
           showLabels ? "gap-2.5 px-4" : "justify-center px-0"
         )}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cream/14 text-cream shadow-[0_1px_0_rgba(255,255,255,0.12)_inset] ring-1 ring-cream/10">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cream/14 text-cream ring-1 ring-cream/15">
           <Home className="h-4 w-4" />
         </div>
         {showLabels && (
@@ -91,7 +91,7 @@ export function AppSidebar({ onNavigate, mobile }: AppSidebarProps) {
                   <>
                     <span className="flex-1 truncate">{item.title}</span>
                     {badge && (
-                      <Badge className="h-5 min-w-5 justify-center border-0 bg-cream/20 px-1.5 text-[10px] text-cream">
+                      <Badge className="h-5 min-w-5 justify-center border-cream/15 bg-cream/16 px-1.5 text-[10px] text-cream">
                         {badge}
                       </Badge>
                     )}

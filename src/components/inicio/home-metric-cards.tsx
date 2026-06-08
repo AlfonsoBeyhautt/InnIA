@@ -69,7 +69,7 @@ export function HomeMetricCards({
         return (
           <article
             key={m.label}
-            className="group relative overflow-hidden rounded-2xl border border-border/65 bg-card/95 px-3.5 py-3 shadow-[0_12px_34px_-30px_rgba(46,58,42,0.4),0_1px_0_rgba(255,255,255,0.85)_inset] transition-colors hover:border-primary/25"
+            className="border-b border-border/80 bg-white px-4 py-3.5"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -81,7 +81,7 @@ export function HomeMetricCards({
                 </p>
                 <p className={`truncate text-[11px] font-medium ${m.deltaTone}`}>{m.delta}</p>
               </div>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-warm-panel text-primary">
                 <Icon className="h-4 w-4" />
               </div>
             </div>

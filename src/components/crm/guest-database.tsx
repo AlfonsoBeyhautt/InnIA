@@ -146,7 +146,7 @@ export function GuestDatabase({
     recurrentFilter !== "all";
 
   return (
-    <div className="relative flex min-h-[calc(100dvh-8rem)] flex-col gap-0 overflow-hidden rounded-2xl border border-primary/12 bg-card shadow-sm max-lg:min-h-[calc(100dvh-3rem-env(safe-area-inset-top,0px))] lg:min-h-[calc(100vh-12rem)] lg:flex-row">
+    <div className="relative flex min-h-[calc(100dvh-8rem)] flex-col gap-0 overflow-hidden rounded-2xl border border-border/80 bg-white shadow-[0_14px_34px_-32px_rgba(37,35,29,0.32)] max-lg:min-h-[calc(100dvh-3rem-env(safe-area-inset-top,0px))] lg:min-h-[calc(100vh-12rem)] lg:flex-row">
       <div
         className={cn(
           "flex w-full max-w-[380px] shrink-0 flex-col border-r border-border/80",
@@ -154,14 +154,22 @@ export function GuestDatabase({
           !mobileShowList && "max-lg:hidden"
         )}
       >
-        <div className="space-y-2 border-b border-border/80 bg-sand/60/80 p-3 max-lg:p-3 lg:space-y-3 lg:p-4">
+        <div className="space-y-3 border-b border-border/80 bg-warm-panel/55 p-3 max-lg:p-3 lg:p-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">
+              Registro de huéspedes
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Identidad, historial y riesgo operativo.
+            </p>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar nombre, documento, email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 border-border/80 bg-card pl-9"
+              className="h-9 border-border/80 bg-white pl-9"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -235,7 +243,7 @@ export function GuestDatabase({
             </Select>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               {filtered.length} registro{filtered.length !== 1 ? "s" : ""}
             </p>
             {hasActiveFilters && (
@@ -251,9 +259,14 @@ export function GuestDatabase({
         </div>
         <ScrollArea className="flex-1">
           {filtered.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">
-              No hay huéspedes con estos filtros.
-            </p>
+            <div className="p-6">
+              <div className="rounded-xl border border-dashed border-border bg-white p-4 text-sm">
+                <p className="font-semibold text-foreground">Sin huéspedes para estos filtros</p>
+                <p className="mt-1 text-muted-foreground">
+                  Ajustá los filtros o limpiá la búsqueda para volver al expediente completo.
+                </p>
+              </div>
+            </div>
           ) : (
           <ul className="divide-y divide-border/60">
             {filtered.map((g) => (
@@ -265,7 +278,7 @@ export function GuestDatabase({
                     setMobileShowList(false);
                   }}
                   className={cn(
-                    "flex w-full gap-3 px-4 py-3.5 text-left transition-colors hover:bg-primary/5",
+                    "flex w-full gap-3 px-4 py-3.5 text-left transition-colors hover:bg-sand/35",
                     selected?.id === g.id && "bg-primary/8 ring-1 ring-inset ring-primary/20"
                   )}
                 >
@@ -305,7 +318,7 @@ export function GuestDatabase({
       <div
         className={cn(
           "flex min-h-0 min-w-0 flex-1 flex-col",
-          "max-lg:absolute max-lg:inset-0 max-lg:z-[2] max-lg:bg-card",
+          "max-lg:absolute max-lg:inset-0 max-lg:z-[2] max-lg:bg-white",
           mobileShowList && "max-lg:hidden"
         )}
       >
@@ -364,8 +377,13 @@ function GuestDetailPanel({
 }) {
   if (!guest) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        Seleccioná un huésped para ver el expediente completo
+      <div className="flex flex-1 items-center justify-center p-6">
+        <div className="max-w-sm rounded-2xl border border-dashed border-border bg-warm-panel/35 p-6 text-center">
+          <p className="font-semibold text-foreground">Seleccioná un huésped</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            El expediente centraliza identidad, historial, pagos, incidentes y señales de confianza.
+          </p>
+        </div>
       </div>
     );
   }
@@ -381,7 +399,10 @@ function GuestDetailPanel({
               </AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-xl font-semibold tracking-tight">{guest.fullName}</h2>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">
+                Expediente huésped
+              </p>
+              <h2 className="mt-0.5 text-2xl font-semibold tracking-tight">{guest.fullName}</h2>
               <p className="text-sm text-muted-foreground">{guest.nationality}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Badge variant={validationVariant[guest.validationStatus]}>
@@ -425,7 +446,7 @@ function GuestDetailPanel({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
           <Section title="Contacto e identidad" icon={User}>
             <Field label="Documento / pasaporte" value={guest.documentId} />
             <Field label="Teléfono" value={guest.phone} icon={Phone} />
@@ -496,7 +517,7 @@ function GuestDetailPanel({
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Historial de reservas
           </h3>
-          <div className="mt-3 overflow-hidden rounded-xl border border-border/80">
+          <div className="ci-data-table mt-3">
             <table className="w-full text-sm">
               <thead className="bg-sand/60 text-left text-xs uppercase text-muted-foreground">
                 <tr>
@@ -588,7 +609,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border/80 bg-sand/60/40 p-4">
+    <div className="rounded-2xl border border-border/80 bg-white p-4">
       <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
         <Icon className="h-3.5 w-3.5" />
         {title}
@@ -620,7 +641,7 @@ function Field({
 
 function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card px-3 py-2">
+    <div className="rounded-xl border border-border/70 bg-warm-panel/45 px-3 py-2.5">
       <p className="text-[10px] uppercase text-muted-foreground">{label}</p>
       <p className="text-sm font-semibold">{value}</p>
     </div>

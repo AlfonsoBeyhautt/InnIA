@@ -30,19 +30,19 @@
 }
 
 :root {
-  --background: #f4efe6;
-  --foreground: #292720;
-  --card: #fffdf8;
+  --background: #f6f1e8;
+  --foreground: #25231d;
+  --card: #fffefa;
   --card-foreground: #292720;
   --primary: #536343;
   --primary-foreground: #faf8f4;
   --secondary: #e9e1d2;
   --secondary-foreground: #474136;
   --muted: #eae3d7;
-  --muted-foreground: #756d60;
+  --muted-foreground: #675f53;
   --accent: #ded5c6;
   --accent-foreground: #33442f;
-  --border: #ded3c2;
+  --border: #d7ccb9;
   --input: #d9cdbb;
   --ring: #536343;
   --success: #4d8a67;
@@ -68,9 +68,7 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background:
-      radial-gradient(circle at 16% -10%, rgba(92, 107, 74, 0.13), transparent 34rem),
-      radial-gradient(circle at 92% 8%, rgba(196, 120, 90, 0.08), transparent 30rem),
-      linear-gradient(180deg, #faf7f2 0%, #f4efe6 42%, #f1eadf 100%);
+      linear-gradient(180deg, #fbf8f1 0%, #f6f1e8 48%, #f2eadf 100%);
     overflow-x: hidden;
     font-feature-settings: "ss01", "cv05", "cv11";
     text-rendering: geometricPrecision;
@@ -112,7 +110,7 @@
   }
 
   .ci-page {
-    @apply mx-auto max-w-[1180px] max-lg:space-y-3 max-lg:px-3 max-lg:py-4 px-4 py-6 sm:px-6 sm:py-8;
+    @apply mx-auto max-w-[1180px] max-lg:space-y-3 max-lg:px-3 max-lg:py-4 px-4 py-5 sm:px-6 sm:py-6;
   }
 
   .ci-page-wide {
@@ -120,23 +118,23 @@
   }
 
   .ci-surface {
-    @apply max-lg:rounded-2xl max-lg:shadow-sm max-lg:transition-none max-lg:hover:translate-y-0 max-lg:hover:shadow-sm rounded-[24px] border border-border/70 bg-card/95 shadow-[0_18px_48px_-32px_rgba(46,58,42,0.38),0_1px_0_rgba(255,255,255,0.8)_inset] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_24px_56px_-34px_rgba(46,58,42,0.46),0_1px_0_rgba(255,255,255,0.9)_inset];
+    @apply rounded-2xl border border-border/80 bg-card shadow-[0_14px_38px_-34px_rgba(37,35,29,0.34)];
   }
 
   .ci-surface-static {
-    @apply max-lg:rounded-2xl max-lg:shadow-sm rounded-[24px] border border-border/70 bg-card/95 shadow-[0_16px_42px_-32px_rgba(46,58,42,0.34),0_1px_0_rgba(255,255,255,0.75)_inset];
+    @apply rounded-2xl border border-border/80 bg-card shadow-[0_10px_32px_-30px_rgba(37,35,29,0.28)];
   }
 
   .ci-elevated {
-    @apply max-lg:rounded-2xl max-lg:shadow-sm rounded-[24px] border border-border/65 bg-card/95 shadow-[0_24px_60px_-34px_rgba(46,58,42,0.42),0_1px_0_rgba(255,255,255,0.85)_inset] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_30px_68px_-36px_rgba(46,58,42,0.5),0_1px_0_rgba(255,255,255,0.9)_inset];
+    @apply rounded-2xl border border-border/80 bg-card shadow-[0_18px_46px_-34px_rgba(37,35,29,0.36)];
   }
 
   .ci-warm-panel {
-    @apply max-lg:rounded-2xl rounded-[24px] border border-border/60 bg-warm-panel/90 shadow-[0_12px_34px_-28px_rgba(46,58,42,0.34),0_1px_0_rgba(255,255,255,0.7)_inset];
+    @apply rounded-2xl border border-border/80 bg-warm-panel/85 shadow-[0_10px_28px_-28px_rgba(37,35,29,0.22)];
   }
 
   .ci-header-band {
-    @apply relative overflow-hidden max-lg:rounded-2xl max-lg:px-4 max-lg:py-5 max-lg:shadow-sm rounded-[28px] border border-border/55 bg-gradient-to-br from-card via-cream to-sand px-6 py-7 shadow-[0_22px_58px_-36px_rgba(46,58,42,0.42),0_1px_0_rgba(255,255,255,0.9)_inset] sm:px-8 sm:py-8;
+    @apply relative overflow-hidden rounded-2xl border border-border/80 bg-card px-5 py-5 shadow-[0_14px_38px_-34px_rgba(37,35,29,0.32)] sm:px-6;
   }
 
   .ci-header-band::before {
@@ -173,7 +171,7 @@
   }
 
   .ci-metric-chip {
-    @apply max-lg:rounded-2xl max-lg:px-3.5 max-lg:py-3 rounded-[22px] border border-border/70 bg-card/95 px-5 py-4 shadow-[0_14px_38px_-30px_rgba(46,58,42,0.4),0_1px_0_rgba(255,255,255,0.75)_inset] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_20px_48px_-32px_rgba(46,58,42,0.48),0_1px_0_rgba(255,255,255,0.85)_inset];
+    @apply rounded-xl border-b border-border/80 bg-white px-4 py-3;
   }
 
   .ci-safe-bottom {
@@ -185,7 +183,7 @@
   }
 
   .ci-card-compact {
-    @apply max-lg:rounded-2xl max-lg:p-3.5 rounded-[22px] border border-border/70 bg-card/95 p-5 shadow-[0_12px_34px_-30px_rgba(46,58,42,0.36),0_1px_0_rgba(255,255,255,0.72)_inset];
+    @apply rounded-2xl border border-border/80 bg-card p-4 shadow-[0_10px_30px_-30px_rgba(37,35,29,0.26)];
   }
 
   .ci-link-subtle {
@@ -193,7 +191,7 @@
   }
 
   .ci-sidebar {
-    @apply bg-[linear-gradient(180deg,#31422f_0%,#3a4b36_46%,#2d3d2c_100%)] text-cream shadow-[8px_0_34px_-28px_rgba(30,38,27,0.7)];
+    @apply bg-[linear-gradient(180deg,#2c3a2b_0%,#344532_54%,#263425_100%)] text-cream shadow-[8px_0_34px_-28px_rgba(30,38,27,0.7)];
   }
 
   .ci-sidebar-nav-active {
@@ -214,5 +212,37 @@
 
   .ci-card-hover {
     @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-12px_rgba(62,79,60,0.16)];
+  }
+
+  .ci-enterprise-header {
+    @apply border-b border-border/80 pb-5;
+  }
+
+  .ci-data-table {
+    @apply overflow-hidden rounded-2xl border border-border/70 bg-white;
+  }
+
+  .ci-data-table table {
+    @apply w-full text-sm;
+  }
+
+  .ci-data-table thead {
+    @apply bg-warm-panel text-[11px] uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  .ci-data-table th {
+    @apply px-4 py-3 font-semibold;
+  }
+
+  .ci-data-table td {
+    @apply px-4 py-3;
+  }
+
+  .ci-data-table tbody {
+    @apply divide-y divide-border/60;
+  }
+
+  .ci-data-table tbody tr {
+    @apply transition-colors hover:bg-sand/35;
   }
 }

@@ -22,8 +22,8 @@ export function HomeUpcomingArrivals({ reservations }: { reservations: Reservati
     .sort((a, b) => a.checkIn.localeCompare(b.checkIn));
 
   return (
-    <section className="flex h-full min-h-[320px] flex-col overflow-hidden rounded-[22px] border border-border/65 bg-card/95 p-3.5 shadow-[0_18px_48px_-42px_rgba(46,58,42,0.48),0_1px_0_rgba(255,255,255,0.85)_inset] max-lg:rounded-2xl lg:h-[350px] lg:min-h-0 lg:p-4">
-      <div className="mb-2.5 flex items-center justify-between gap-3">
+    <section className="flex h-full min-h-[320px] flex-col overflow-hidden rounded-2xl border border-border/80 bg-white lg:h-[350px] lg:min-h-0">
+      <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-3">
         <div>
           <h2 className="text-base font-semibold tracking-tight text-foreground">
             Próximas llegadas
@@ -39,16 +39,16 @@ export function HomeUpcomingArrivals({ reservations }: { reservations: Reservati
         </Button>
       </div>
 
-      <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1">
+      <ul className="min-h-0 flex-1 divide-y divide-border/60 overflow-y-auto">
         {upcoming.length === 0 ? (
-          <li className="flex h-full min-h-[110px] items-center justify-center rounded-2xl border border-dashed border-border/70 bg-sand/35 px-4 text-center text-sm text-muted-foreground">
-            No hay llegadas próximas.
+          <li className="flex h-full min-h-[160px] items-center justify-center px-5 text-center text-sm text-muted-foreground">
+            No hay llegadas próximas para el filtro actual.
           </li>
         ) : (
           upcoming.map((r) => (
             <li
               key={r.id}
-              className="grid min-h-[62px] grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-border/55 bg-cream/55 px-3 py-2 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset] transition-colors hover:bg-sand/65"
+              className="grid min-h-[62px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-2.5 transition-colors hover:bg-sand/35"
             >
               <Avatar className="h-9 w-9">
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
@@ -65,7 +65,7 @@ export function HomeUpcomingArrivals({ reservations }: { reservations: Reservati
                   {formatShortDate(r.checkIn)} → {formatShortDate(r.checkOut)}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
+              <div className="flex shrink-0 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-primary">
                 <PlaneLanding className="h-3.5 w-3.5" />
                 {r.status === "check-in" ? "En curso" : "Confirmada"}
               </div>

@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="relative flex min-h-[100dvh] overflow-hidden bg-background lg:min-h-screen">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(196,120,90,0.08),transparent_28rem),radial-gradient(circle_at_30%_100%,rgba(83,99,67,0.1),transparent_34rem)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(53,70,51,0.035),transparent_24rem)]" />
         <DesktopSidebar />
         {mobileOpen && (
           <>

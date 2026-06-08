@@ -109,19 +109,16 @@ export default function ReservasPage() {
   const calendarEmptyBanner = (
     <>
       <div className="min-w-0 flex-1 space-y-0.5">
-        <p className="text-sm font-medium text-foreground">
-          No hay reservas cargadas para este período.
+        <p className="text-sm font-semibold text-foreground">
+          Sin reservas visibles para este período.
         </p>
         <p className="text-xs text-muted-foreground">
-          El calendario sigue disponible para navegar fechas y unidades.
+          La grilla queda activa para revisar disponibilidad por unidad y validar sincronización.
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">
-        <Button asChild size="sm" className="rounded-xl">
-          <Link href="/app/reservas">Crear reserva</Link>
-        </Button>
         <Button asChild variant="outline" size="sm" className="rounded-xl">
-          <Link href="/app/configuracion">Sincronizar calendario</Link>
+          <Link href="/app/configuracion">Configurar sincronización</Link>
         </Button>
       </div>
     </>
@@ -129,10 +126,13 @@ export default function ReservasPage() {
 
   return (
     <div className="flex flex-col max-lg:h-[calc(100dvh-3rem-env(safe-area-inset-top,0px))] lg:h-[calc(100vh-4rem)]">
-      <div className="shrink-0 border-b border-border/70 bg-card px-3 py-2.5 max-lg:sticky max-lg:top-0 max-lg:z-10 sm:px-4 sm:py-3 lg:px-6">
+      <div className="shrink-0 border-b border-border/80 bg-[#fbf8f1]/92 px-3 py-3 backdrop-blur-xl max-lg:sticky max-lg:top-0 max-lg:z-10 sm:px-4 lg:px-6">
         <div className="flex flex-wrap items-center justify-between gap-2 max-lg:gap-2 lg:gap-3">
           <div className="min-w-0">
-            <h1 className="text-base font-semibold tracking-tight text-foreground lg:text-xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
+              Calendario PMS
+            </p>
+            <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-foreground lg:text-2xl">
               Reservas
             </h1>
             <p className="text-xs text-muted-foreground max-lg:truncate lg:text-sm">
@@ -148,8 +148,8 @@ export default function ReservasPage() {
           </div>
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 max-lg:mt-2 lg:mt-3 lg:gap-2">
-          <div className="flex rounded-lg border border-border/70 bg-sand/60 p-0.5">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 lg:gap-2">
+          <div className="flex rounded-lg border border-border/80 bg-white p-0.5">
             {(["semana", "quincena", "mes"] as const).map((v) => (
               <button
                 key={v}
@@ -225,7 +225,7 @@ export default function ReservasPage() {
       </div>
 
       <div className="relative flex min-h-0 flex-1">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2 max-lg:p-2 lg:p-3 xl:p-4">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2 max-lg:p-2 lg:p-4">
           <PmsTimelineCalendar
             reservations={filtered}
             propertyFilter={selectedProperty}
@@ -264,7 +264,7 @@ export default function ReservasPage() {
         )}
 
         {detailOpen && (
-          <div className="hidden w-[340px] max-w-[340px] shrink-0 border-l border-border/70 bg-card p-3 lg:block">
+          <div className="hidden w-[340px] max-w-[340px] shrink-0 border-l border-border/80 bg-white p-3 lg:block">
             <ReservationDetailPanel
               reservation={selectedReservation}
               onClose={() => setDetailOpen(false)}
