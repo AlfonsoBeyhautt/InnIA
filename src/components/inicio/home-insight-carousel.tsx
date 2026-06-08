@@ -85,14 +85,14 @@ export function HomeInsightCarousel({
 
   return (
     <section
-      className="ci-card-compact flex h-full min-h-0 flex-col max-lg:min-h-[160px] lg:min-h-[200px] lg:rounded-[20px] lg:p-4 lg:shadow-[0_2px_16px_-6px_rgba(62,79,60,0.08)] sm:lg:p-5"
+      className="flex h-full min-h-[190px] flex-col rounded-[20px] border border-border/65 bg-card/95 p-4 shadow-[0_14px_40px_-34px_rgba(46,58,42,0.42),0_1px_0_rgba(255,255,255,0.82)_inset] max-lg:rounded-2xl"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-2.5 flex items-center justify-between gap-2">
         <div>
-          <h2 className="ci-section-title">Resumen del día</h2>
-          <p className="ci-section-sub">Insights operativos e IA</p>
+          <h2 className="text-base font-semibold tracking-tight text-foreground">Resumen del día</h2>
+          <p className="text-xs text-muted-foreground">Insights operativos e IA</p>
         </div>
         <div className="flex items-center gap-0.5">
           <button
@@ -114,13 +114,13 @@ export function HomeInsightCarousel({
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait">
           <InsightSlide key={current.id} insight={current} />
         </AnimatePresence>
       </div>
 
-      <div className="mt-3 flex items-center justify-center gap-1.5">
+      <div className="mt-2.5 flex items-center justify-center gap-1.5">
         {insights.map((item, i) => (
           <button
             key={item.id}
@@ -150,24 +150,26 @@ function InsightSlide({ insight }: { insight: HomeInsight }) {
       exit={{ opacity: 0, x: -10 }}
       transition={{ duration: 0.28, ease: "easeOut" }}
       className={cn(
-        "flex h-full flex-col justify-between rounded-2xl border px-4 py-3.5",
+        "flex h-full flex-col justify-between overflow-hidden rounded-2xl border px-4 py-3",
         accent.bg,
         accent.border
       )}
     >
       <div>
-        <div className={cn("mb-2 flex items-center gap-2", accent.icon)}>
+        <div className={cn("mb-1.5 flex items-center gap-2", accent.icon)}>
           <Icon className="h-4 w-4 shrink-0" />
           <h3 className="text-sm font-semibold text-foreground">{insight.title}</h3>
         </div>
-        <p className="text-sm leading-relaxed text-muted-foreground">{insight.content}</p>
+        <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+          {insight.content}
+        </p>
       </div>
       {insight.href && insight.ctaLabel && (
         <Button
           asChild
           variant="outline"
           size="sm"
-          className="mt-3 w-fit rounded-xl border-border/60 bg-white/60 text-xs font-medium hover:bg-white"
+          className="mt-1.5 h-7 w-fit rounded-xl border-border/60 bg-white/60 px-2.5 text-xs font-medium hover:bg-white"
         >
           <Link href={insight.href}>{insight.ctaLabel}</Link>
         </Button>

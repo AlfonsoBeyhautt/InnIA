@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
-import { ArrowLeft, Inbox, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInbox } from "@/context/inbox-context";
 import { ConversationList } from "@/components/inbox/conversation-list";
@@ -10,28 +9,22 @@ import { AiCopilotPanel } from "@/components/inbox/ai-copilot-panel";
 
 export function InboxWorkspace() {
   const {
-    conversations,
     mobileShowList,
     setMobileShowList,
     aiPanelOpen,
     setAiPanelOpen,
   } = useInbox();
 
-  const pendingCount = useMemo(
-    () => conversations.filter((c) => c.unread || c.urgency !== "normal").length,
-    [conversations]
-  );
-
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-col bg-muted/60",
+        "flex min-h-0 flex-col bg-[#f8f6f1]",
         "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-20",
         "max-lg:top-[calc(3rem+env(safe-area-inset-top,0px))]",
-        "lg:relative lg:inset-auto lg:z-auto lg:h-[calc(100dvh-4rem)]"
+        "lg:relative lg:inset-auto lg:z-auto lg:h-[calc(100dvh-4rem)] lg:px-6 lg:py-4"
       )}
     >
-      <header className="sticky top-0 z-10 shrink-0 border-b border-border/70 bg-white/95 backdrop-blur-sm max-lg:px-3 max-lg:py-2 lg:static lg:px-4 lg:py-2.5">
+      <header className="sticky top-0 z-10 shrink-0 border-b border-border/70 bg-white/95 backdrop-blur-sm max-lg:px-3 max-lg:py-2 lg:static lg:border-b-0 lg:bg-transparent lg:px-0 lg:pb-3 lg:pt-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             {!mobileShowList && (
@@ -44,11 +37,8 @@ export function InboxWorkspace() {
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-white lg:h-8">
-              <Inbox className="h-4 w-4" />
-            </div>
             <div className="min-w-0">
-              <h1 className="truncate text-sm font-semibold text-foreground lg:text-lg">
+              <h1 className="truncate text-base font-semibold text-foreground lg:text-xl">
                 Centro de mensajes
               </h1>
               <p className="hidden text-xs text-muted-foreground lg:block">
@@ -57,11 +47,6 @@ export function InboxWorkspace() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            {pendingCount > 0 && (
-              <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-900 lg:px-2 lg:text-[11px]">
-                {pendingCount}
-              </span>
-            )}
             <button
               type="button"
               onClick={() => setAiPanelOpen(!aiPanelOpen)}
@@ -80,13 +65,13 @@ export function InboxWorkspace() {
         </div>
       </header>
 
-      <div className="relative flex min-h-0 flex-1 overflow-hidden">
+      <div className="relative flex min-h-0 flex-1 overflow-hidden rounded-[24px] border border-border/70 bg-white shadow-[0_18px_54px_-46px_rgba(46,58,42,0.48)] max-lg:rounded-none max-lg:border-0">
         <aside
           className={cn(
             "flex w-full shrink-0 flex-col border-r border-border/70 bg-white",
             "max-lg:absolute max-lg:inset-0 max-lg:z-[1]",
             !mobileShowList && "max-lg:hidden",
-            "lg:relative lg:flex lg:w-[min(100%,280px)] xl:w-[300px]"
+            "lg:relative lg:flex lg:w-[min(100%,320px)] xl:w-[340px]"
           )}
         >
           <ConversationList />
@@ -102,11 +87,6 @@ export function InboxWorkspace() {
         >
           <MessageThread />
         </main>
-
-        {/* Desktop: panel columna (sin cambios) */}
-        <div className="hidden lg:contents">
-          <AiCopilotPanel />
-        </div>
 
         {/* Mobile/Tablet: sheet inferior IA */}
         {aiPanelOpen && (

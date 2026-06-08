@@ -113,7 +113,7 @@ export function InboxProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [analyses, setAnalyses] = useState<Record<string, AiAnalysis>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [intentTab, setIntentTab] = useState<InboxIntentTab>("nueva_consulta");
+  const [intentTab, setIntentTab] = useState<InboxIntentTab>("todos");
   const [channelFilter, setChannelFilter] = useState<Platform | "all">("all");
   const [filter, setFilter] = useState<InboxFilter>("all");
   const [search, setSearch] = useState("");

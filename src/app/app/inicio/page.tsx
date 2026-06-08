@@ -11,6 +11,7 @@ import { HomeMessagesCard } from "@/components/inicio/home-messages-card";
 import { HomeUrgentTasks } from "@/components/inicio/home-urgent-tasks";
 import { HomeIntegrations } from "@/components/inicio/home-integrations";
 import { HomeInsightCarousel } from "@/components/inicio/home-insight-carousel";
+import { HomeOperationsStatus } from "@/components/inicio/home-operations-status";
 import { PageSection } from "@/components/motion/page-section";
 import { useApi } from "@/lib/hooks/use-api";
 import { useSession } from "@/lib/hooks/use-session";
@@ -78,14 +79,13 @@ export default function InicioPage() {
         : properties.filter((p) => (p.slug ?? p.id) === selectedProperty),
     [properties, selectedProperty]
   );
-
   return (
-    <div className="ci-page ci-page-wide min-h-full space-y-4 pb-8">
-      <PageSection>
+    <div className="ci-page ci-page-wide min-h-full space-y-3 pb-6 lg:min-h-[calc(100dvh-76px)] lg:space-y-3 lg:px-4 lg:py-3">
+      <PageSection className="shrink-0">
         <HomeHero />
       </PageSection>
 
-      <PageSection delay={0.03}>
+      <PageSection delay={0.03} className="shrink-0">
         <HomeMetricCards
           reservations={filteredReservations}
           conversations={filteredConversations}
@@ -94,29 +94,36 @@ export default function InicioPage() {
         />
       </PageSection>
 
-      <div className="grid gap-4 lg:grid-cols-5 lg:items-stretch">
-        <PageSection delay={0.05} className="lg:col-span-2">
+      <div className="grid gap-3 lg:min-h-[350px] lg:grid-cols-[1.25fr_1.35fr_0.9fr] lg:items-stretch">
+        <PageSection delay={0.05} className="min-h-0">
           <HomeUpcomingArrivals reservations={filteredReservations} />
         </PageSection>
-        <PageSection delay={0.06} className="lg:col-span-3">
+        <PageSection delay={0.06} className="min-h-0">
           <HomeMessagesCard conversations={filteredConversations} />
+        </PageSection>
+        <PageSection delay={0.08} className="min-h-0">
+          <HomeUrgentTasks tasks={filteredTasks} />
         </PageSection>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:items-stretch">
-        <PageSection delay={0.08}>
-          <HomeUrgentTasks tasks={filteredTasks} />
-        </PageSection>
-        <PageSection delay={0.09}>
-          <HomeIntegrations />
-        </PageSection>
-        <PageSection delay={0.1}>
+      <div className="grid gap-3 lg:grid-cols-[1.25fr_0.85fr_1fr] lg:items-stretch">
+        <PageSection delay={0.1} className="min-h-0">
           <HomeInsightCarousel
             conversations={filteredConversations}
             reservations={filteredReservations}
             tasks={filteredTasks}
             properties={propertiesForInsights}
             unitCount={unitCount}
+          />
+        </PageSection>
+        <PageSection delay={0.11} className="min-h-0">
+          <HomeIntegrations />
+        </PageSection>
+        <PageSection delay={0.12} className="min-h-0">
+          <HomeOperationsStatus
+            reservations={filteredReservations}
+            tasks={filteredTasks}
+            conversations={filteredConversations}
           />
         </PageSection>
       </div>

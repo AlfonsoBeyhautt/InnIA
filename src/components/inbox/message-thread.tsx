@@ -3,12 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { Bot, CheckCircle2, ClipboardList, Send, User } from "lucide-react";
+import {
+  Bot,
+  CalendarDays,
+  Check,
+  ExternalLink,
+  MoreHorizontal,
+  Paperclip,
+  Send,
+  User,
+  Users,
+  Zap,
+} from "lucide-react";
 import { useInbox } from "@/context/inbox-context";
-import { useToast } from "@/context/toast-context";
 import { useProperty } from "@/context/property-context";
 import { INTENT_CATEGORY_LABELS } from "@/lib/conversations/intent-classifier";
-import { IntentCategoryBadge } from "@/components/inbox/intent-category-badge";
 import type { IntentCategory } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,13 +26,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function MessageThread() {
-  const { toast } = useToast();
   const {
     selected,
     sendOwnerMessage,
     getAnalysis,
-    markResolved,
-    createTaskFromConversation,
     reclassifyIntent,
   } = useInbox();
   const { resolvePropertyName } = useProperty();
@@ -64,24 +70,22 @@ export function MessageThread() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="sticky top-0 z-[1] shrink-0 border-b border-border/70 bg-white/95 px-3 py-2 backdrop-blur-sm max-lg:px-3 max-lg:py-2 lg:static lg:px-4 lg:py-3">
-        <div className="flex items-start gap-2">
+    <div className="flex h-full min-h-0 flex-col bg-white">
+      <div className="sticky top-0 z-[1] shrink-0 border-b border-border/60 bg-white/95 px-5 py-4 backdrop-blur-sm max-lg:px-3 max-lg:py-2 lg:static">
+        <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-sm font-semibold text-foreground lg:text-base">
-              {selected.guestName}
-            </h2>
-            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground max-lg:max-h-12 max-lg:overflow-y-auto lg:mt-1 lg:gap-2 lg:text-xs">
-              <PlatformBadge platform={selected.platform} />
-              <IntentCategoryBadge category={selected.intentCategory} />
-              <span>{resolvePropertyName(selected.propertyId)}</span>
-              {selected.reservationId && (
-                <Badge variant="outline" className="text-[9px]">
-                  Reserva activa
-                </Badge>
-              )}
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="truncate text-base font-semibold text-foreground lg:text-lg">
+                {selected.guestName}
+              </h2>
+              <Badge variant="success" className="text-[10px]">
+                {INTENT_CATEGORY_LABELS[selected.intentCategory]}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {resolvePropertyName(selected.propertyId)}
+              </span>
               <select
-                className="h-6 rounded border border-border/80 bg-white px-1 text-[10px] text-muted-foreground"
+                className="sr-only"
                 value={selected.intentCategory}
                 onChange={(e) =>
                   void reclassifyIntent(
@@ -99,61 +103,38 @@ export function MessageThread() {
                   )
                 )}
               </select>
-              {selected.labels.slice(0, 2).map((label) => (
-                <Badge key={label} variant="secondary" className="text-[9px]">
-                  {label}
-                </Badge>
-              ))}
             </div>
-            <div className="mt-1.5 flex flex-wrap gap-1 max-lg:overflow-x-auto max-lg:pb-0.5 lg:mt-2 lg:gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 shrink-0 text-[10px] max-lg:h-8 lg:text-[11px]"
-                onClick={async () => {
-                  try {
-                    await markResolved(selected.id);
-                    toast("Conversación marcada como resuelta.", "success");
-                  } catch {
-                    toast("No se pudo actualizar la conversación.", "error");
-                  }
-                }}
-              >
-                <CheckCircle2 className="mr-1 h-3 w-3" />
-                Resuelta
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-[11px]"
-                onClick={async () => {
-                  try {
-                    await createTaskFromConversation(selected.id);
-                    toast("Tarea operativa creada.", "success");
-                  } catch {
-                    toast("No se pudo crear la tarea.", "error");
-                  }
-                }}
-              >
-                <ClipboardList className="mr-1 h-3 w-3" />
-                Crear tarea
-              </Button>
-              <Button variant="outline" size="sm" className="h-7 text-[11px]" asChild>
-                <Link href="/app/crm">Huésped</Link>
-              </Button>
-              {selected.reservationId && (
-                <Button variant="outline" size="sm" className="h-7 text-[11px]" asChild>
-                  <Link href="/app/reservas">Reserva</Link>
-                </Button>
-              )}
+            <div className="mt-3 flex flex-wrap items-center gap-5 text-xs text-foreground">
+              <span className="inline-flex items-center gap-2">
+                <PlatformBadge platform={selected.platform} />
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                Reserva: 4 - 6 jun.
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                2 huéspedes
+              </span>
             </div>
+          </div>
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
+            <Button variant="outline" size="sm" className="h-9 rounded-xl bg-white text-xs" asChild>
+              <Link href="/app/reservas">
+                Ver reserva
+                <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl bg-white">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-sand/60/40 p-3 max-lg:p-2.5 lg:p-4"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#fbfaf7] px-5 py-5 max-lg:p-3 lg:px-10"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -161,8 +142,13 @@ export function MessageThread() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-4"
+            className="space-y-6"
           >
+            <div className="flex items-center justify-center">
+              <span className="rounded-full bg-white px-3 py-1 text-[11px] text-muted-foreground shadow-sm ring-1 ring-border/55">
+                Hoy
+              </span>
+            </div>
             {selected.messages.map((msg, i) => (
               <motion.div
                 key={msg.id}
@@ -170,25 +156,30 @@ export function MessageThread() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.03, 0.2) }}
                 className={cn(
-                  "flex gap-2 max-lg:gap-2 lg:gap-2.5",
+                  "flex gap-2 max-lg:gap-2 lg:gap-3",
                   msg.sender === "guest" ? "justify-start" : "justify-end"
                 )}
               >
                 {msg.sender === "guest" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-white">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-[#f3f0e7] text-[11px] font-semibold text-muted-foreground">
+                    {selected.guestName
+                      .split(" ")
+                      .map((part) => part[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
                   </div>
                 )}
                 <div
                   className={cn(
-                    "max-w-[min(92%,480px)] rounded-2xl px-3 py-2 text-[13px] shadow-sm max-lg:max-w-[88%] lg:px-3.5 lg:py-2.5 lg:text-sm",
+                    "max-w-[min(92%,520px)] rounded-2xl px-4 py-3 text-[13px] shadow-sm max-lg:max-w-[88%] lg:text-sm",
                     msg.sender === "guest" && "border border-border/70 bg-white",
-                    msg.sender === "ai" && "border border-primary/20 bg-primary/8",
+                    msg.sender === "ai" && "border border-olive/15 bg-[#eff1e8]",
                     msg.sender === "owner" && "bg-olive text-cream"
                   )}
                 >
                   {msg.sender === "ai" && (
-                    <span className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                    <span className="mb-2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-olive">
                       <Bot className="h-3 w-3" />
                       Respondido por IA
                       {analysis?.autoSentAt && msg === selected.messages[selected.messages.length - 1] && (
@@ -199,30 +190,30 @@ export function MessageThread() {
                     </span>
                   )}
                   <p className="leading-relaxed">{msg.content}</p>
-                  <p
-                    className={cn(
-                      "mt-1.5 text-[10px]",
-                      msg.sender === "owner" ? "text-white/70" : "text-slate-400"
-                    )}
-                  >
-                    {msg.timestamp}
-                  </p>
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <p
+                      className={cn(
+                        "text-[10px]",
+                        msg.sender === "owner" ? "text-white/70" : "text-slate-400"
+                      )}
+                    >
+                      {msg.timestamp}
+                    </p>
+                    {msg.sender === "ai" && <Check className="h-3.5 w-3.5 text-olive" />}
+                  </div>
                 </div>
                 {msg.sender !== "guest" && (
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border",
-                      msg.sender === "ai"
-                        ? "border-primary/20 bg-primary/10"
-                        : "border-primary/30 bg-primary/10"
-                    )}
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-white text-muted-foreground shadow-sm"
+                    aria-label="Opciones de mensaje"
                   >
                     {msg.sender === "ai" ? (
-                      <Bot className="h-4 w-4 text-primary" />
+                      <Bot className="h-4 w-4" />
                     ) : (
-                      <User className="h-4 w-4 text-primary" />
+                      <User className="h-4 w-4" />
                     )}
-                  </div>
+                  </button>
                 )}
               </motion.div>
             ))}
@@ -230,24 +221,38 @@ export function MessageThread() {
         </AnimatePresence>
       </div>
 
-      <div className="ci-safe-bottom sticky bottom-0 z-[1] shrink-0 border-t border-border/70 bg-white p-2.5 max-lg:p-2 lg:p-3">
-        <div className="flex gap-2">
+      <div className="ci-safe-bottom sticky bottom-0 z-[1] shrink-0 border-t border-border/60 bg-white px-5 py-4 max-lg:p-3 lg:px-10">
+        <div className="rounded-2xl border border-border/70 bg-white p-3 shadow-[0_10px_30px_-26px_rgba(46,58,42,0.4)]">
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Escribí un mensaje al huésped..."
-            className="min-h-[40px] resize-none border-border/70 bg-sand/60 text-sm focus-visible:ring-primary/30 max-lg:text-base lg:min-h-[44px]"
+            placeholder="Escribir un mensaje..."
+            className="min-h-[54px] resize-none border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 max-lg:text-base"
             rows={2}
           />
-          <Button
-            size="icon"
-            className="ci-touch-target h-10 w-10 shrink-0 self-end lg:h-11 lg:w-11"
-            onClick={handleSend}
-            disabled={!draft.trim()}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Paperclip className="h-4 w-4" />
+              <button type="button" className="inline-flex items-center gap-1.5 font-medium">
+                <Zap className="h-4 w-4" />
+                Respuesta rápida
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                className="ci-touch-target h-9 w-9 shrink-0 rounded-xl bg-olive text-cream hover:bg-olive/90"
+                onClick={handleSend}
+                disabled={!draft.trim()}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

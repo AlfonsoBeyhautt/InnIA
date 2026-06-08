@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInbox, type InboxFilter } from "@/context/inbox-context";
 import { useProperty } from "@/context/property-context";
@@ -10,27 +10,18 @@ import { IntentCategoryBadge } from "@/components/inbox/intent-category-badge";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { InboxEmptyState } from "@/components/inbox/inbox-empty-state";
-import type { InboxIntentTab, Platform } from "@/types";
+import type { InboxIntentTab } from "@/types";
 
-const intentTabs: { id: InboxIntentTab; label: string }[] = [
-  { id: "nueva_consulta", label: "Nuevas consultas" },
-  { id: "huesped_activo", label: "Huéspedes activos" },
-  { id: "comercial", label: "Comercial" },
-  { id: "todos", label: "Todos" },
-];
-
-const statusFilters: { id: InboxFilter; label: string }[] = [
-  { id: "all", label: "Todas" },
-  { id: "unread", label: "Sin leer" },
-  { id: "review", label: "Revisar" },
-];
-
-const channelFilters: { id: Platform | "all"; label: string }[] = [
-  { id: "all", label: "Canal" },
-  { id: "WhatsApp", label: "WhatsApp" },
-  { id: "Instagram", label: "Instagram" },
-  { id: "Airbnb", label: "Airbnb" },
-  { id: "Booking", label: "Booking" },
+const tabs: {
+  id: "todos" | "unread" | "huesped_activo" | "comercial";
+  label: string;
+  intent: InboxIntentTab;
+  filter: InboxFilter;
+}[] = [
+  { id: "todos", label: "Todos", intent: "todos", filter: "all" },
+  { id: "unread", label: "No leídos", intent: "todos", filter: "unread" },
+  { id: "huesped_activo", label: "Huéspedes", intent: "huesped_activo", filter: "all" },
+  { id: "comercial", label: "Comercial", intent: "comercial", filter: "all" },
 ];
 
 export function ConversationList() {
@@ -41,8 +32,6 @@ export function ConversationList() {
     setSelectedId,
     intentTab,
     setIntentTab,
-    channelFilter,
-    setChannelFilter,
     filter,
     setFilter,
     search,
@@ -50,80 +39,61 @@ export function ConversationList() {
     getAnalysis,
   } = useInbox();
   const { resolvePropertyName } = useProperty();
+  const unreadCount = conversations.filter((c) => c.unread).length;
+
+  const countFor = (id: (typeof tabs)[number]["id"]) => {
+    if (id === "todos") return conversations.length;
+    if (id === "unread") return unreadCount;
+    return intentCounts[id];
+  };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-card">
-      <div className="shrink-0 space-y-1.5 border-b border-border/70 p-2 max-lg:p-2.5 lg:space-y-2 lg:p-3">
-        <div className="flex gap-1 overflow-x-auto pb-0.5">
-          {intentTabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setIntentTab(tab.id)}
-              className={cn(
-                "flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors",
-                intentTab === tab.id
-                  ? "bg-olive text-cream"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              )}
-            >
-              {tab.label}
-              <span
-                className={cn(
-                  "rounded-full px-1.5 text-[9px]",
-                  intentTab === tab.id ? "bg-cream/20" : "bg-background"
-                )}
-              >
-                {intentCounts[tab.id]}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div className="relative">
+    <div className="flex h-full min-h-0 flex-col bg-white">
+      <div className="shrink-0 space-y-3 border-b border-border/70 p-4 max-lg:p-3">
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-1">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar conversación..."
-            className="h-8 max-lg:h-9 border-border/80 bg-sand/50 pl-8 text-sm max-lg:text-xs lg:h-9"
+            className="h-10 rounded-xl border-border/70 bg-white pl-8 text-sm shadow-sm max-lg:text-xs"
           />
+          </div>
+          <button
+            type="button"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-white text-muted-foreground shadow-sm transition-colors hover:bg-sand/60"
+            aria-label="Filtros"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex flex-wrap gap-1">
-          {channelFilters.map((ch) => (
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+          {tabs.map((tab) => {
+            const active = intentTab === tab.intent && filter === tab.filter;
+            return (
             <button
-              key={ch.id}
+              key={tab.id}
               type="button"
-              onClick={() => setChannelFilter(ch.id)}
+              onClick={() => {
+                setIntentTab(tab.intent);
+                setFilter(tab.filter);
+              }}
               className={cn(
-                "rounded-lg px-2 py-0.5 text-[10px] font-medium transition-colors",
-                channelFilter === ch.id
-                  ? "bg-primary/15 text-primary ring-1 ring-primary/25"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
+                "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                active
+                  ? "bg-olive text-cream shadow-sm"
+                  : "bg-sand/70 text-muted-foreground hover:bg-sand"
               )}
             >
-              {ch.label}
+              {tab.label}
+              <span className={cn("rounded-full px-1.5 text-[9px]", active ? "bg-cream/20" : "bg-white")}>
+                {countFor(tab.id)}
+              </span>
             </button>
-          ))}
-        </div>
-
-        <div className="flex gap-1">
-          {statusFilters.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              className={cn(
-                "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors",
-                filter === f.id
-                  ? "bg-olive/90 text-cream"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -131,7 +101,7 @@ export function ConversationList() {
         {conversations.length === 0 ? (
           <InboxEmptyState />
         ) : (
-          <ul className="divide-y divide-border/50">
+          <ul className="divide-y divide-border/55">
             {conversations.map((c) => {
               const active = selectedId === c.id;
               const analysis = getAnalysis(c.id);
@@ -141,11 +111,11 @@ export function ConversationList() {
                     type="button"
                     onClick={() => setSelectedId(c.id)}
                     className={cn(
-                      "flex w-full gap-2 px-2.5 py-2.5 text-left transition-colors max-lg:gap-2 lg:gap-2.5 lg:px-3 lg:py-3",
+                      "relative flex w-full gap-3 px-4 py-3 text-left transition-colors",
                       active
-                        ? "bg-primary/12 ring-1 ring-inset ring-primary/20"
-                        : "hover:bg-sand/60",
-                      c.urgency === "urgente" && !active && "border-l-2 border-l-terracotta"
+                        ? "bg-[#edf2e8]"
+                        : "hover:bg-sand/45",
+                      c.urgency === "urgente" && !active && "before:absolute before:left-0 before:top-3 before:h-10 before:w-0.5 before:rounded-full before:bg-terracotta"
                     )}
                   >
                     <div className="relative shrink-0">
@@ -155,7 +125,9 @@ export function ConversationList() {
                         </AvatarFallback>
                       </Avatar>
                       {c.unread && (
-                        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-white" />
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-olive text-[9px] font-semibold text-cream ring-2 ring-white">
+                          1
+                        </span>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -172,7 +144,7 @@ export function ConversationList() {
                           {c.lastMessageAt}
                         </span>
                       </div>
-                      <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">
+                      <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
                         {resolvePropertyName(c.propertyId)}
                         {c.reservationId ? " · Con reserva" : ""}
                       </p>
